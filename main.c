@@ -120,7 +120,7 @@ void execute_cpu(machine* mch)
 			mch->pc += 1;
 			break;
 		}
-		case 0x79:
+		case 0x79: // adc absolute,y
 		{
 			uint8_t address = opcode[1];
 			adc(mch->Y, &address, &(mch->P)); // add with carry Y to opcode
@@ -129,12 +129,25 @@ void execute_cpu(machine* mch)
 			mch->pc += 1;
 			break;
 		}
-		case 0x61:
-			fprintf(stdout, "Add: (indirect, X)\n");
+		case 0x61: // adc indirect x
+		{
+			uint8_t address = mch->memory[opcode[1]];
+			adc(mch->X, &address, &(mch->P));
+			uint8_t value = mch->memory[address];
+			adc(value, &(mch->A), &(mch->P));
+			mch->pc += 1;
 			break;
-		case 0x71:
-			fprintf(stdout, "Add: (indirect), Y\n");
+
+		}
+		case 0x71: // adc indirect y
+		{
+			uint8_t address = mch->memory[opcode[1]];
+			adc(mch->Y, &address, &(mch->P));
+			uint8_t value = mch->memory[address];
+			adc(value, &(mch->A), &(mch->P));
+			mch->pc += 1;
 			break;
+		}
 	}		
 
 	mch->pc += 1; // advance program counter
