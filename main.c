@@ -29,7 +29,31 @@ void execute_cpu(machine* mch)
 		case 0xEA:
 			fprintf(stdout, "NOP\n");
 			break;
-	}
+		case 0x69:
+			fprintf(stdout, "Add: immediate\n");
+			break;
+		case 0x65:
+			fprintf(stdout, "Add: zero page\n");
+			break;
+		case 0x75:
+			fprintf(stdout, "Add: zero page, X\n");
+			break;
+		case 0x6D:
+			fprintf(stdout, "Add: absolute\n");
+			break;
+		case 0x7D:
+			fprintf(stdout, "Add: absolute, X\n");
+			break;
+		case 0x79:
+			fprintf(stdout, "Add: absolute, Y\n");
+			break;
+		case 0x61:
+			fprintf(stdout, "Add: (indirect, X)\n");
+			break;
+		case 0x71:
+			fprintf(stdout, "Add: (indirect), Y\n");
+			break;
+	}		
 
 	mch->pc += 1; // advance program counter
 }
@@ -59,7 +83,7 @@ int main(int argc, char* argv[])
 
 	mch->memory = (uint8_t*)malloc(100 * sizeof(uint8_t));
 	mch->memory[0] = 0xEA; // NOP
-	mch->memory[1] = 0xEA;
+	mch->memory[1] = 0x69;
 	mch->memory[2] = 0xEA;
 	execute_cpu(mch);
 	execute_cpu(mch);
