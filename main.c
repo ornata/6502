@@ -46,40 +46,39 @@ void print_bits(uint8_t x)
 	fprintf(stdout,"\n");
 } 
 
-void adc(machine* mch, uint8_t value)
+void adc(uint8_t value, uint8_t* dest, uint8_t* P)
 {
-	uint8_t sum = mch->A + value;
-	uint8_t carry = (sum) ^ mch->A ^ value;
+	uint8_t sum = *dest + value;
+	uint8_t carry = sum ^ (*dest) ^ value;
 
 	// check for carry
 	if (carry & 0b10000000) {
-		mch->P = SET_CARRY(mch->P); // set bit 0 = carry to 1
+		*P = SET_CARRY(*P); // set bit 0 = carry to 1
 	} else {
-		mch->P = CLEAR_CARRY(mch->P);
+		*P = CLEAR_CARRY(*P);
 	}
 
 	// check for zero
 	if (sum == 0b00000000) {
-		mch->P = SET_ZERO(mch->P);
+		*P = SET_ZERO(*P);
 	} else {
-		mch->P = CLEAR_ZERO(mch->P);
+		*P = CLEAR_ZERO(*P);
 	}
 
 	// check for overflow
 	if ((sum + carry) & 0b10000000) {
-		mch->P = SET_OVERFLOW(mch->P);
+		*P = SET_OVERFLOW(*P);
 	} else {
-		mch->P = CLEAR_OVERFLOW(mch->P);
+		*P = CLEAR_OVERFLOW(*P);
 	}
 
 	// check for negative
-	if (mch->P & 0b10000000) {
-		SET_NEG(mch->P);
+	if (*P & 0b10000000) {
+		SET_NEG(*P);
 	} else {
-		CLEAR_NEG(mch->P);
+		CLEAR_NEG(*P);
 	}
-	mch->A = sum;
-	mch->pc += 1;
+	*dest = sum;
 }
 
 void execute_cpu(machine* mch)
@@ -88,24 +87,12 @@ void execute_cpu(machine* mch)
 
 	switch(*opcode){
 		case 0xEA:
-			fprintf(stdout, "NOP\n");
 			break;
 
 		/* Add: add contents of memory location to accumulator with carry */
 		case 0x69: // adc immediate
-			if (DEBUG){
-				fprintf(stdout, "ADC #<value>\n");
-				fprintf(stdout, "<value> = %d\n", opcode[1]);
-				fprintf(stdout, "A = %d\n", mch->A);
-			}
-
-			adc(mch, opcode[1]);
-
-			if (DEBUG){
-				fprintf(stdout, "A + value = %d\n", mch->A);
-				fprintf(stdout, "P: ");
-				print_bits(mch->P);
-			}
+			adc(opcode[1], &(mch->A), &(mch->P));
+			mch->pc += 1;
 			break;
 
 		case 0x65: // adc zero page
@@ -116,34 +103,32 @@ void execute_cpu(machine* mch)
 			fprintf(stdout, "Add: zero page, X\n");
 			break;
 
-		case 0x6D:
+		case 0x6D: // adc absolute
 		{
 			uint8_t address = opcode[1];
 			uint8_t value = mch->memory[address];
-
-			if (DEBUG){
-				fprintf(stdout, "ADC <address>\n");
-				fprintf(stdout, "<address> = %d\n", address);
-				fprintf(stdout, "<value> = %d\n", value);
-				fprintf(stdout, "A = %d\n", mch->A);
-			}
-
-			adc(mch, value);
-
-			if (DEBUG){
-				fprintf(stdout, "A + value = %d\n", mch->A);
-				fprintf(stdout, "P: ");
-				print_bits(mch->P);
-			}
-
+			adc(value, &(mch->A), &(mch->P));
+			mch->pc += 1;
 			break;
 		}
-		case 0x7D:
-			fprintf(stdout, "Add: absolute, X\n");
+		case 0x7D: // adc absolute,x
+		{
+			uint8_t address = opcode[1];
+			adc(mch->X, &address, &(mch->P)); // add with carry X to opcode
+			uint8_t value = mch->memory[address];
+			adc(value, &(mch->A), &(mch->P));
+			mch->pc += 1;
 			break;
+		}
 		case 0x79:
-			fprintf(stdout, "Add: absolute, Y\n");
+		{
+			uint8_t address = opcode[1];
+			adc(mch->Y, &address, &(mch->P)); // add with carry Y to opcode
+			uint8_t value = mch->memory[address];
+			adc(value, &(mch->A), &(mch->P));
+			mch->pc += 1;
 			break;
+		}
 		case 0x61:
 			fprintf(stdout, "Add: (indirect, X)\n");
 			break;
@@ -183,7 +168,7 @@ int main(int argc, char* argv[])
 	mch->memory[1] = 0x69; // ADC
 	mch->memory[2] = 0xFF; // value to add to accumulator
 	mch->memory[3] = 0xEA; // nop
-	mch->memory[4] = 0x6D; // ADC
+	mch->memory[4] = 0x7D; // ADC
 	mch->memory[5] = 0x01; // look at entry 1 in memory and add that value (0x69)
 
 	execute_cpu(mch);
