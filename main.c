@@ -4,7 +4,16 @@
 
 #define INIT_PC 0 // placeholder
 #define INTERRUPT_PERIOD 100 // placeholder
-#define CPU_FREQ 
+
+#define SET_CARRY(x)   x | 0b00000001
+#define CLEAR_CARRY(x) x & 0b11111110
+#define SET_ZERO(x)    x | 0b00000010
+#define CLEAR_ZERO(x)  x & 0b11111101
+#define SET_OVERFLOW(x) x | 0b01000000
+#define CLEAR_OVERFLOW(x) x & 0b10111111
+#define SET_NEG(x) x | 0b10000000
+#define CLEAR_NEG(x) x & 0b01111111
+
 
 typedef struct machine {
 	uint8_t A; // accumulator
@@ -23,15 +32,74 @@ void emulate_sound();
 void emulate_graphics();
 void time_sync();
 
+
+/* Print the bits in an uint8_t */
+void print_bits(uint8_t x)
+{
+	uint32_t b = 0b10000000;
+	while (b != 0){
+		fprintf(stdout, "%d", (b & x) ? 1 : 0);
+		x ^= b; // turn off b-th bit
+		b >>= 1;
+	}
+	fprintf(stdout,"\n");
+}
+
 void execute_cpu(machine* mch)
 {
-	switch(mch->memory[mch->pc]){
+
+	// current opcode
+	uint8_t *opcode = &mch->memory[mch->pc];
+
+	switch(*opcode){
 		case 0xEA:
 			fprintf(stdout, "NOP\n");
 			break;
+
+		/* Add: add contents of memory location to accumulator with carry */
 		case 0x69:
-			fprintf(stdout, "Add: immediate\n");
+			fprintf(stdout, "ADC #<value>\n");
+			fprintf(stdout, "<value> = %d\n", opcode[1]);
+			fprintf(stdout, "A = %d\n", mch->A);
+
+			uint8_t sum = mch->A + opcode[1];
+			uint8_t carry = (sum) ^ mch->A ^ opcode[1];
+
+			// check for carry
+			if (carry & 0b10000000) {
+				mch->P = SET_CARRY(mch->P); // set bit 0 = carry to 1
+			} else {
+				mch->P = CLEAR_CARRY(mch->P);
+			}
+
+			// check for zero
+			if (sum == 0b00000000) {
+				mch->P = SET_ZERO(mch->P);
+			} else {
+				mch->P = CLEAR_ZERO(mch->P);
+			}
+
+			// check for overflow
+			if ((sum + carry) & 0b10000000) {
+				mch->P = SET_OVERFLOW(mch->P);
+			} else {
+				mch->P = CLEAR_OVERFLOW(mch->P);
+			}
+
+			// check for negative
+			if (mch->P & 0b10000000) {
+				SET_NEG(mch->P);
+			} else {
+				CLEAR_NEG(mch->P);
+			}
+
+			mch->A = sum;
+			fprintf(stdout, "A + value = %d\n", mch->A);
+			fprintf(stdout, "P: ");
+			print_bits(mch->P);
+			mch->pc += 1;
 			break;
+
 		case 0x65:
 			fprintf(stdout, "Add: zero page\n");
 			break;
@@ -83,8 +151,10 @@ int main(int argc, char* argv[])
 
 	mch->memory = (uint8_t*)malloc(100 * sizeof(uint8_t));
 	mch->memory[0] = 0xEA; // NOP
-	mch->memory[1] = 0x69;
-	mch->memory[2] = 0xEA;
+	mch->memory[1] = 0x69; // ADC
+	mch->memory[2] = 0xFF; // value to add to accumulator
+	mch->memory[3] = 0xEA; // nop
+	execute_cpu(mch);
 	execute_cpu(mch);
 	execute_cpu(mch);
 	execute_cpu(mch);
