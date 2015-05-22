@@ -45,6 +45,42 @@ void print_bits(uint8_t x)
 	fprintf(stdout,"\n");
 }
 
+void adc_immediate(machine* mch, uint8_t* opcode)
+{
+	uint8_t sum = mch->A + opcode[1];
+	uint8_t carry = (sum) ^ mch->A ^ opcode[1];
+
+	// check for carry
+	if (carry & 0b10000000) {
+		mch->P = SET_CARRY(mch->P); // set bit 0 = carry to 1
+	} else {
+		mch->P = CLEAR_CARRY(mch->P);
+	}
+
+	// check for zero
+	if (sum == 0b00000000) {
+		mch->P = SET_ZERO(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+	}
+
+	// check for overflow
+	if ((sum + carry) & 0b10000000) {
+		mch->P = SET_OVERFLOW(mch->P);
+	} else {
+		mch->P = CLEAR_OVERFLOW(mch->P);
+	}
+
+	// check for negative
+	if (mch->P & 0b10000000) {
+		SET_NEG(mch->P);
+	} else {
+		CLEAR_NEG(mch->P);
+	}
+	mch->A = sum;
+	mch->pc += 1;
+}
+
 void execute_cpu(machine* mch)
 {
 
@@ -62,42 +98,11 @@ void execute_cpu(machine* mch)
 			fprintf(stdout, "<value> = %d\n", opcode[1]);
 			fprintf(stdout, "A = %d\n", mch->A);
 
-			uint8_t sum = mch->A + opcode[1];
-			uint8_t carry = (sum) ^ mch->A ^ opcode[1];
+			adc_immediate(mch, opcode);
 
-			// check for carry
-			if (carry & 0b10000000) {
-				mch->P = SET_CARRY(mch->P); // set bit 0 = carry to 1
-			} else {
-				mch->P = CLEAR_CARRY(mch->P);
-			}
-
-			// check for zero
-			if (sum == 0b00000000) {
-				mch->P = SET_ZERO(mch->P);
-			} else {
-				mch->P = CLEAR_ZERO(mch->P);
-			}
-
-			// check for overflow
-			if ((sum + carry) & 0b10000000) {
-				mch->P = SET_OVERFLOW(mch->P);
-			} else {
-				mch->P = CLEAR_OVERFLOW(mch->P);
-			}
-
-			// check for negative
-			if (mch->P & 0b10000000) {
-				SET_NEG(mch->P);
-			} else {
-				CLEAR_NEG(mch->P);
-			}
-
-			mch->A = sum;
 			fprintf(stdout, "A + value = %d\n", mch->A);
 			fprintf(stdout, "P: ");
 			print_bits(mch->P);
-			mch->pc += 1;
 			break;
 
 		case 0x65:
