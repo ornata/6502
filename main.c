@@ -212,10 +212,7 @@ void execute_cpu(machine* mch)
 
 int main(int argc, char* argv[])
 {
-	int32_t cycles_until_interrupt = INTERRUPT_PERIOD; // how many cycles until next we expect the next interrupt?
 	char running = 1; // avoid compiler treating a constant 1 as a variable, temporarily 0
-	char cycles[140]; // how many cycles does the current opcode take?
-
 /*
 	FILE* fp;
 	fp = fopen(argv[1], "r");
