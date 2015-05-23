@@ -37,7 +37,19 @@ void time_sync();
 /* Print the bits in an uint8_t */
 void print_bits(uint8_t x)
 {
-	uint32_t b = 0b10000000;
+	uint32_t b = 0x80;
+	while (b != 0){
+		fprintf(stdout, "%d", (b & x) ? 1 : 0);
+		x ^= b; // turn off b-th bit
+		b >>= 1;
+	}
+	fprintf(stdout,"\n");
+} 
+
+/* Print the bits in an uint8_t */
+void print_bits16(uint8_t x)
+{
+	uint32_t b = 0x8000;
 	while (b != 0){
 		fprintf(stdout, "%d", (b & x) ? 1 : 0);
 		x ^= b; // turn off b-th bit
@@ -84,6 +96,7 @@ void adc(uint8_t value, uint8_t* dest, uint8_t* P)
 void execute_cpu(machine* mch)
 {
 	uint8_t *opcode = &mch->memory[mch->pc];
+	uint8_t *memory = mch->memory;
 
 	switch(*opcode){
 		case 0xEA:
@@ -106,7 +119,7 @@ void execute_cpu(machine* mch)
 		case 0x6D: // adc absolute
 		{
 			uint8_t address = opcode[1];
-			uint8_t value = mch->memory[address];
+			uint8_t value = memory[address];
 			adc(value, &(mch->A), &(mch->P));
 			mch->pc += 1;
 			break;
@@ -115,7 +128,7 @@ void execute_cpu(machine* mch)
 		{
 			uint8_t address = opcode[1];
 			adc(mch->X, &address, &(mch->P)); // add with carry X to opcode
-			uint8_t value = mch->memory[address];
+			uint8_t value = memory[address];
 			adc(value, &(mch->A), &(mch->P));
 			mch->pc += 1;
 			break;
@@ -124,30 +137,74 @@ void execute_cpu(machine* mch)
 		{
 			uint8_t address = opcode[1];
 			adc(mch->Y, &address, &(mch->P)); // add with carry Y to opcode
-			uint8_t value = mch->memory[address];
+			uint8_t value = memory[address];
 			adc(value, &(mch->A), &(mch->P));
 			mch->pc += 1;
 			break;
 		}
+		// todo: adc indirects are WRONG -- should read address from opcode[1], opcode[2]
 		case 0x61: // adc indirect x
 		{
+			uint16_t address = 0x0000;
+			uint8_t top = memory[opcode[1]];
+			uint8_t bot = memory[opcode[2]];
+
+			printf("%d\n", top);
+			print_bits(top);
+			printf("%d\n", bot);
+			print_bits(bot);
+
+			address ^= bot;
+			print_bits16(address);
+			address ^= ((uint16_t)top << 7);
+			printf("%d\n", address);
+			print_bits16(address);
+/*
 			uint8_t address = mch->memory[opcode[1]];
 			adc(mch->X, &address, &(mch->P));
 			uint8_t value = mch->memory[address];
 			adc(value, &(mch->A), &(mch->P));
+		*/
 			mch->pc += 1;
 			break;
 
 		}
 		case 0x71: // adc indirect y
 		{
-			uint8_t address = mch->memory[opcode[1]];
+			uint8_t address = memory[opcode[1]];
 			adc(mch->Y, &address, &(mch->P));
-			uint8_t value = mch->memory[address];
+			uint8_t value = memory[address];
 			adc(value, &(mch->A), &(mch->P));
 			mch->pc += 1;
 			break;
 		}
+
+		/* AND - and accumulator with memory */
+		case 0x29:
+			fprintf(stdout, "and immediate\n");
+			break;
+		case 0x25:
+			fprintf(stdout, "and zero page\n");
+			break;
+		case 0x35:
+			fprintf(stdout, "and zp, x\n");
+			break;
+		case 0x2D:
+			fprintf(stdout, "and absolute\n");
+			break;
+		case 0x3D:
+			fprintf(stdout, "and abs, x\n");
+			break;
+		case 0x39:
+			fprintf(stdout, "and abs, y\n");
+			break;
+		case 0x21:
+			fprintf(stdout, "and (oper, x)\n");
+			break;
+		case 0x31:
+			fprintf(stdout, "and (oper), y\n");
+			break;
+
 	}		
 
 	mch->pc += 1; // advance program counter
@@ -180,9 +237,9 @@ int main(int argc, char* argv[])
 	mch->memory[0] = 0xEA; // NOP
 	mch->memory[1] = 0x69; // ADC
 	mch->memory[2] = 0xFF; // value to add to accumulator
-	mch->memory[3] = 0xEA; // nop
-	mch->memory[4] = 0x7D; // ADC
-	mch->memory[5] = 0x01; // look at entry 1 in memory and add that value (0x69)
+	mch->memory[3] = 0x61; // nop
+	mch->memory[4] = 0x00; 
+	mch->memory[5] = 0x01; 
 
 	execute_cpu(mch);
 	execute_cpu(mch);
