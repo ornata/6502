@@ -234,6 +234,12 @@ int main(int argc, char* argv[])
 	}
 
 	mch->memory = (uint8_t*)malloc(100 * sizeof(uint8_t));
+
+	if (mch->memory == NULL) {
+		fprintf(stderr, "Could not allocate memory. Exiting. \n");
+		exit(-2);
+	}
+
 	mch->memory[0] = 0xEA; // NOP
 	mch->memory[1] = 0x69; // ADC
 	mch->memory[2] = 0xFF; // value to add to accumulator
