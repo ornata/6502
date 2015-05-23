@@ -139,7 +139,7 @@ void execute_cpu(machine* mch)
 			mch->pc += 1;
 			break;
 		}
-		
+
 		case 0x61: // adc indirect x
 		{
 			uint16_t address = 0x0000;
@@ -147,7 +147,7 @@ void execute_cpu(machine* mch)
 			uint8_t bot = memory[opcode[2]];
 			address = (((uint16_t)top << 8) | bot);
 			adc(mch->X, &address, &(mch->P));
-			adc(memory[address], &(mch->A), &(mch->P))
+			adc(memory[address], &(mch->A), &(mch->P));
 			mch->pc += 2;
 			break;
 		}
@@ -158,7 +158,7 @@ void execute_cpu(machine* mch)
 			uint8_t bot = memory[opcode[2]];
 			address = (((uint16_t)top << 8) | bot);
 			adc(mch->Y, &address, &(mch->P));
-			adc(memory[address], &(mch->A), &(mch->P))
+			adc(memory[address], &(mch->A), &(mch->P));
 			mch->pc += 2;
 			break;
 		}
