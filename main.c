@@ -15,7 +15,6 @@
 #define SET_NEG(x) x | 0b10000000
 #define CLEAR_NEG(x) x & 0b01111111
 
-
 typedef struct machine {
 	uint8_t A; // accumulator
 	uint8_t X; // x index
@@ -26,13 +25,11 @@ typedef struct machine {
 	uint8_t *memory;
 } machine;
 
-
 void execute_cpu(machine* m);
 void generate_interrupts();
 void emulate_sound();
 void emulate_graphics();
 void time_sync();
-
 
 /* Print the bits in an uint8_t */
 void print_bits(uint8_t x)
