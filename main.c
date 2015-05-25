@@ -133,7 +133,7 @@ void asl(uint8_t value, uint8_t* dest, uint8_t* P)
 		*dest <<= value;
 	} else {
 		*dest <<= value;
-		*dest &= 0b10000000;
+		*dest |= 0b10000000;
 	}
 
 	// set the zero flag
