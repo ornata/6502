@@ -55,6 +55,10 @@ void print_bits16(uint16_t x)
 	fprintf(stdout,"\n");
 } 
 
+/*
+* ADD with carry - Add value to dest and update flags.
+* Flags affected: S, V, Z, C
+*/
 void adc(uint8_t value, uint8_t* dest, uint8_t* P)
 {
 	uint8_t sum = *dest + value;
@@ -82,12 +86,36 @@ void adc(uint8_t value, uint8_t* dest, uint8_t* P)
 	}
 
 	// check for negative
-	if (*P & 0b10000000) {
+	if (sum & 0b10000000) {
 		SET_NEG(*P);
 	} else {
 		CLEAR_NEG(*P);
 	}
 	*dest = sum;
+}
+
+/*
+* AND - Bitwise AND with accumulator
+* Flags affected: S, Z
+*/
+void and(uint8_t value, uint8_t* A, uint8_t* P)
+{
+	uint8_t anded = *A & value;
+
+	// check if result is 0
+	if (anded == 0b00000000) {
+		*P = SET_ZERO(*P);
+	} else {
+		*P = CLEAR_ZERO(*P);
+	}
+
+	// check if result is negative or positive
+	if (anded & 0b10000000) {
+		SET_NEG(*P);
+	} else {
+		CLEAR_NEG(*P);
+	}
+
 }
 
 void execute_cpu(machine* mch)
@@ -138,12 +166,8 @@ void execute_cpu(machine* mch)
 		{
 			uint8_t top = memory[opcode[1]];
 			uint8_t bot = memory[opcode[2]];
-			printf("top: %x\n", top);
-			printf("bot: %x\n", bot);
 			adc(mch->X, &top, &(mch->P));
-			printf("top with X added: %x\n", top);
 			uint16_t address = (((uint16_t)top << 8) | bot);
-			printf("address: %x\n", address);
 			adc(memory[address], &(mch->A), &(mch->P));
 			mch->pc += 2;
 			break;
@@ -152,41 +176,65 @@ void execute_cpu(machine* mch)
 		{
 			uint8_t top = memory[opcode[1]];
 			uint8_t bot = memory[opcode[2]];
-			printf("top: %x\n", top);
-			printf("bot: %x\n", bot);
 			adc(mch->Y, &top, &(mch->P));
-			printf("top with Y added: %x\n", top);
 			uint16_t address = (((uint16_t)top << 8) | bot);
-			printf("address: %x\n", address);
 			adc(memory[address], &(mch->A), &(mch->P));
 			mch->pc += 2;
 			break;
 		}
 
 		/* AND - and accumulator with memory */
-		case 0x29:
+		case 0x29: // and immediate
 			fprintf(stdout, "and immediate\n");
+			and(opcode[1], &(mch->A), &(mch->P));
+			mch->pc += 1;
 			break;
-		case 0x25:
+
+		case 0x25: // and zero page
 			fprintf(stdout, "and zero page\n");
 			break;
-		case 0x35:
+
+		case 0x35: // and zero page, offset by X
 			fprintf(stdout, "and zp, x\n");
 			break;
-		case 0x2D:
+
+		case 0x2D: // and absolute
 			fprintf(stdout, "and absolute\n");
+			and(memory[opcode[1]], &(mch->A), &(mch->P));
+			mch->pc += 1;
 			break;
+
 		case 0x3D:
 			fprintf(stdout, "and abs, x\n");
+			adc(mch->X, &(opcode[1]), &(mch->P));
+			and(memory[opcode[1]], &(mch->A), &(mch->P));
+			mch->pc += 1;
 			break;
+
 		case 0x39:
 			fprintf(stdout, "and abs, y\n");
+			adc(mch->Y, &(opcode[1]), &(mch->P));
+			and(memory[opcode[1]], &(mch->A), &(mch->P));
+			mch->pc += 1;
 			break;
+
 		case 0x21:
+		{
 			fprintf(stdout, "and (oper, x)\n");
+			uint8_t top = memory[opcode[1]];
+			uint8_t bot = memory[opcode[2]];
+			adc(mch->X, &top, &(mch->P));
+			uint16_t address = (((uint16_t)top << 8) | bot);
+			and(memory[address], &(mch->A), &(mch->P));
 			break;
+		}
 		case 0x31:
 			fprintf(stdout, "and (oper), y\n");
+			uint8_t top = memory[opcode[1]];
+			uint8_t bot = memory[opcode[2]];
+			adc(mch->Y, &top, &(mch->P));
+			uint16_t address = (((uint16_t)top << 8) | bot);
+			and(memory[address], &(mch->A), &(mch->P));
 			break;
 
 	}		
