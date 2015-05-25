@@ -226,18 +226,22 @@ void execute_cpu(machine* mch)
 			adc(mch->X, &top, &(mch->P));
 			uint16_t address = (((uint16_t)top << 8) | bot);
 			and(memory[address], &(mch->A), &(mch->P));
+			mch->pc += 2;
 			break;
 		}
 		case 0x31:
+		{
 			fprintf(stdout, "and (oper), y\n");
 			uint8_t top = memory[opcode[1]];
 			uint8_t bot = memory[opcode[2]];
 			adc(mch->Y, &top, &(mch->P));
 			uint16_t address = (((uint16_t)top << 8) | bot);
 			and(memory[address], &(mch->A), &(mch->P));
+			mch->pc += 2;
 			break;
+		}
 
-	}		
+	}
 
 	mch->pc += 1; // advance program counter
 }
