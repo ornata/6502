@@ -31,6 +31,8 @@ void emulate_sound();
 void emulate_graphics();
 void time_sync();
 
+
+/********** DEBUGGING FUNCTIONS ***********/
 /* Print the bits in an uint8_t */
 void print_bits(uint8_t x)
 {
@@ -43,7 +45,7 @@ void print_bits(uint8_t x)
 	fprintf(stdout,"\n");
 } 
 
-/* Print the bits in an uint8_t */
+/* Print the bits in an uint16_t */
 void print_bits16(uint16_t x)
 {
 	uint32_t b = 0x8000;
@@ -54,6 +56,9 @@ void print_bits16(uint16_t x)
 	}
 	fprintf(stdout,"\n");
 } 
+
+
+/********** MAIN FUNCTIONS ***********/
 
 /*
 * ADD with carry - Add value to dest and update flags.
