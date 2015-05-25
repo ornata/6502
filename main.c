@@ -25,6 +25,10 @@ typedef struct machine {
 	uint8_t *memory;
 } machine;
 
+
+void adc(uint8_t value, uint8_t* dest, uint8_t* P);
+void and(uint8_t value, uint8_t* A, uint8_t* P);
+void asl(uint8_t value, uint8_t* dest, uint8_t* P);
 void execute_cpu(machine* m);
 void generate_interrupts();
 void emulate_sound();
@@ -70,32 +74,29 @@ void adc(uint8_t value, uint8_t* dest, uint8_t* P)
 	uint8_t carry = sum ^ (*dest) ^ value;
 
 	// check for carry
-	if (carry & 0b10000000) {
+	if (carry & 0b10000000)
 		*P = SET_CARRY(*P); // set bit 0 = carry to 1
-	} else {
+	else
 		*P = CLEAR_CARRY(*P);
-	}
 
 	// check for zero
-	if (sum == 0b00000000) {
+	if (sum == 0b00000000)
 		*P = SET_ZERO(*P);
-	} else {
+	else
 		*P = CLEAR_ZERO(*P);
-	}
 
 	// check for overflow
-	if ((sum + carry) & 0b10000000) {
+	if ((sum + carry) & 0b10000000)
 		*P = SET_OVERFLOW(*P);
-	} else {
+	else
 		*P = CLEAR_OVERFLOW(*P);
-	}
 
 	// check for negative
-	if (sum & 0b10000000) {
+	if (sum & 0b10000000)
 		SET_NEG(*P);
-	} else {
+	else
 		CLEAR_NEG(*P);
-	}
+
 	*dest = sum;
 }
 
@@ -108,18 +109,51 @@ void and(uint8_t value, uint8_t* A, uint8_t* P)
 	uint8_t anded = *A & value;
 
 	// check if result is 0
-	if (anded == 0b00000000) {
+	if (anded == 0b00000000)
 		*P = SET_ZERO(*P);
-	} else {
+	else
 		*P = CLEAR_ZERO(*P);
-	}
 
 	// check if result is negative or positive
-	if (anded & 0b10000000) {
-		SET_NEG(*P);
+	if (anded & 0b10000000)
+		*P = SET_NEG(*P);
+	else
+		*P = CLEAR_NEG(*P);
+
+}
+
+/*
+* ASL - Arithmetic shift left dest by value bits.
+* Flags affected: N, Z, C
+*/
+void asl(uint8_t value, uint8_t* dest, uint8_t* P)
+{
+	// negative left shifts aren't defined in C
+	if (*dest >= 0) {
+		*dest <<= value;
 	} else {
-		CLEAR_NEG(*P);
+		*dest <<= value;
+		*dest &= 0b10000000;
 	}
+
+	// set the zero flag
+	if (*dest == 0)
+		*P = SET_ZERO(*P);
+	else
+		*P = CLEAR_ZERO(*P);
+
+	// set the carry flag
+	if ((0b00000001 << value) == 0)
+		*P = SET_CARRY(*P);
+	else
+		*P = CLEAR_CARRY(*P);
+
+	// set the neg flag
+	if (*dest < 0)
+		*P = SET_NEG(*P);
+	else
+		*P = CLEAR_NEG(*P);
+
 
 }
 
@@ -152,6 +186,7 @@ void execute_cpu(machine* mch)
 			mch->pc += 1;
 			break;
 		}
+
 		case 0x7D: // adc absolute,x
 		{
 			adc(mch->X, &(opcode[1]), &(mch->P)); // add with carry X to opcode
@@ -159,6 +194,7 @@ void execute_cpu(machine* mch)
 			mch->pc += 1;
 			break;
 		}
+
 		case 0x79: // adc absolute,y
 		{
 			adc(mch->Y, &(opcode[1]), &(mch->P)); // add with carry Y to opcode
@@ -177,6 +213,7 @@ void execute_cpu(machine* mch)
 			mch->pc += 2;
 			break;
 		}
+
 		case 0x71: // adc indirect y
 		{
 			uint8_t top = memory[opcode[1]];
@@ -209,21 +246,21 @@ void execute_cpu(machine* mch)
 			mch->pc += 1;
 			break;
 
-		case 0x3D:
+		case 0x3D: // and absolute, offset by X
 			fprintf(stdout, "and abs, x\n");
 			adc(mch->X, &(opcode[1]), &(mch->P));
 			and(memory[opcode[1]], &(mch->A), &(mch->P));
 			mch->pc += 1;
 			break;
 
-		case 0x39:
+		case 0x39: // and absolute, offset by Y
 			fprintf(stdout, "and abs, y\n");
 			adc(mch->Y, &(opcode[1]), &(mch->P));
 			and(memory[opcode[1]], &(mch->A), &(mch->P));
 			mch->pc += 1;
 			break;
 
-		case 0x21:
+		case 0x21: // and indirect, offset by X
 		{
 			fprintf(stdout, "and (oper, x)\n");
 			uint8_t top = memory[opcode[1]];
@@ -234,7 +271,8 @@ void execute_cpu(machine* mch)
 			mch->pc += 2;
 			break;
 		}
-		case 0x31:
+
+		case 0x31: // and indirect, offset by Y
 		{
 			fprintf(stdout, "and (oper), y\n");
 			uint8_t top = memory[opcode[1]];
@@ -246,9 +284,20 @@ void execute_cpu(machine* mch)
 			break;
 		}
 
-	}
+		/* ASL - arithmetic shift left for memory or accumulator */
+		case 0x0A: // accumulator
+			break;
+		case 0x06: // zero page
+			break;
+		case 0x16: // zero page, offset by X
+			break;
+		case 0x0E: // absolute
+			break;
+		case 0x1E: // absolute, offset by X
+			break;
 
 	mch->pc += 1; // advance program counter
+	}
 }
 
 int main(int argc, char* argv[])
