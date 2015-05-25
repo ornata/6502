@@ -115,49 +115,49 @@ void execute_cpu(machine* mch)
 
 		case 0x6D: // adc absolute
 		{
-			uint8_t address = opcode[1];
-			uint8_t value = memory[address];
-			adc(value, &(mch->A), &(mch->P));
+			adc(memory[opcode[1]], &(mch->A), &(mch->P));
 			mch->pc += 1;
 			break;
 		}
 		case 0x7D: // adc absolute,x
 		{
-			uint8_t address = opcode[1];
-			adc(mch->X, &address, &(mch->P)); // add with carry X to opcode
-			uint8_t value = memory[address];
-			adc(value, &(mch->A), &(mch->P));
+			adc(mch->X, &(opcode[1]), &(mch->P)); // add with carry X to opcode
+			adc(memory[opcode[1]], &(mch->A), &(mch->P));
 			mch->pc += 1;
 			break;
 		}
 		case 0x79: // adc absolute,y
 		{
-			uint8_t address = opcode[1];
-			adc(mch->Y, &address, &(mch->P)); // add with carry Y to opcode
-			uint8_t value = memory[address];
-			adc(value, &(mch->A), &(mch->P));
+			adc(mch->Y, &(opcode[1]), &(mch->P)); // add with carry Y to opcode
+			adc(memory[opcode[1]], &(mch->A), &(mch->P));
 			mch->pc += 1;
 			break;
 		}
 
 		case 0x61: // adc indirect x
 		{
-			uint16_t address = 0x0000;
 			uint8_t top = memory[opcode[1]];
 			uint8_t bot = memory[opcode[2]];
-			address = (((uint16_t)top << 8) | bot);
-			adc(mch->X, &address, &(mch->P));
+			printf("top: %x\n", top);
+			printf("bot: %x\n", bot);
+			adc(mch->X, &top, &(mch->P));
+			printf("top with X added: %x\n", top);
+			uint16_t address = (((uint16_t)top << 8) | bot);
+			printf("address: %x\n", address);
 			adc(memory[address], &(mch->A), &(mch->P));
 			mch->pc += 2;
 			break;
 		}
 		case 0x71: // adc indirect y
 		{
-			uint16_t address = 0x0000;
 			uint8_t top = memory[opcode[1]];
 			uint8_t bot = memory[opcode[2]];
-			address = (((uint16_t)top << 8) | bot);
-			adc(mch->Y, &address, &(mch->P));
+			printf("top: %x\n", top);
+			printf("bot: %x\n", bot);
+			adc(mch->Y, &top, &(mch->P));
+			printf("top with Y added: %x\n", top);
+			uint16_t address = (((uint16_t)top << 8) | bot);
+			printf("address: %x\n", address);
 			adc(memory[address], &(mch->A), &(mch->P));
 			mch->pc += 2;
 			break;
@@ -227,11 +227,15 @@ int main(int argc, char* argv[])
 	mch->memory[3] = 0x61; // nop
 	mch->memory[4] = 0x00; 
 	mch->memory[5] = 0x01; 
+	mch->memory[6] = 0x61;
+	mch->memory[7] = 0;
+	mch->memory[8] = 1;
+	int len = 8;
+	int i;
 
-	execute_cpu(mch);
-	execute_cpu(mch);
-	execute_cpu(mch);
-	execute_cpu(mch);
+	for (i = 0; i < len; i++) {
+		execute_cpu(mch);
+	}
 
 /*
 	// main loop. run while cpu is running	
