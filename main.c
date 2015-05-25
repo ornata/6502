@@ -6,13 +6,13 @@
 #define INTERRUPT_PERIOD 100 // placeholder
 #define DEBUG 1
 
-#define SET_CARRY(x)   x | 0b00000001
+#define SET_CARRY(x)   x | 0b00010001
 #define CLEAR_CARRY(x) x & 0b11111110
-#define SET_ZERO(x)    x | 0b00000010
+#define SET_ZERO(x)    x | 0b00010010
 #define CLEAR_ZERO(x)  x & 0b11111101
-#define SET_OVERFLOW(x) x | 0b01000000
+#define SET_OVERFLOW(x) x | 0b01010000
 #define CLEAR_OVERFLOW(x) x & 0b10111111
-#define SET_NEG(x) x | 0b10000000
+#define SET_NEG(x) x | 0b10010000
 #define CLEAR_NEG(x) x & 0b01111111
 
 typedef struct machine {
@@ -269,6 +269,7 @@ int main(int argc, char* argv[])
 		exit(-2);
 	}
 
+	mch->P = 0b00001000; // bit 5 is 1 at all times
 	mch->memory[0] = 0xEA; // NOP
 	mch->memory[1] = 0x69; // ADC
 	mch->memory[2] = 0xFF; // value to add to accumulator
