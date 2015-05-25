@@ -328,10 +328,12 @@ int main(int argc, char* argv[])
 	}
 
 	mch->P = 0b00001000; // bit 5 is 1 at all times
-	mch->memory[0] = 0xEA; // NOP
-	mch->memory[1] = 0x69; // ADC
-	mch->memory[2] = 0xFF; // value to add to accumulator
-	mch->memory[3] = 0x61; // nop
+
+	/* Testing zone */
+	mch->memory[0] = 0xEA; 
+	mch->memory[1] = 0x69; 
+	mch->memory[2] = 0xFF; 
+	mch->memory[3] = 0x61; 
 	mch->memory[4] = 0x00; 
 	mch->memory[5] = 0x01; 
 	mch->memory[6] = 0x61;
