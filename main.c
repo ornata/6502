@@ -669,6 +669,7 @@ int main(int argc, char* argv[])
 
 	mch->P = 0b00010000; // bit 5 is 1 at all times
 	mch->cycle = 0;
+	read_rom(mch->memory, fp);
 
 	// main loop. run while cpu is running	
 	while(running){
