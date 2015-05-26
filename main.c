@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #define INIT_PC 0 // placeholder
 #define INTERRUPT_PERIOD 100 // placeholder
@@ -23,6 +24,7 @@ typedef struct machine {
 	uint8_t S; // stack
 	uint16_t pc; // program counter
 	uint8_t *memory;
+	int cycle;
 } machine;
 
 
@@ -67,6 +69,7 @@ void print_bits16(uint16_t x)
 /*
 * ADD with carry - Add value to dest and update flags.
 * Flags affected: S, V, Z, C
+* Cycles: 
 */
 void adc(uint8_t value, uint8_t* dest, uint8_t* P)
 {
@@ -164,26 +167,32 @@ void execute_cpu(machine* mch)
 
 	switch(*opcode){
 		case 0xEA:
+			mch->cycle += 1;
 			break;
 
 		/* Add: add contents of memory location to accumulator with carry */
 		case 0x69: // adc immediate
 			adc(opcode[1], &(mch->A), &(mch->P));
 			mch->pc += 1;
+			mch->cycle += 2;
 			break;
 
 		case 0x65: // adc zero page
 			fprintf(stdout, "Add: zero page\n");
+			mch->pc += 1;
+			mch->cycle += 2;
 			break;
 
-		case 0x75:
+		case 0x75: // adc zero page, offset by X
 			fprintf(stdout, "Add: zero page, X\n");
+			mch->cycle += 2;
 			break;
 
 		case 0x6D: // adc absolute
 		{
 			adc(memory[opcode[1]], &(mch->A), &(mch->P));
 			mch->pc += 1;
+			mch->cycle += 3;
 			break;
 		}
 
@@ -192,6 +201,7 @@ void execute_cpu(machine* mch)
 			adc(mch->X, &(opcode[1]), &(mch->P)); // add with carry X to opcode
 			adc(memory[opcode[1]], &(mch->A), &(mch->P));
 			mch->pc += 1;
+			mch->cycle += 3;
 			break;
 		}
 
@@ -200,6 +210,7 @@ void execute_cpu(machine* mch)
 			adc(mch->Y, &(opcode[1]), &(mch->P)); // add with carry Y to opcode
 			adc(memory[opcode[1]], &(mch->A), &(mch->P));
 			mch->pc += 1;
+			mch->cycle += 3;
 			break;
 		}
 
@@ -211,6 +222,7 @@ void execute_cpu(machine* mch)
 			uint16_t address = (((uint16_t)top << 8) | bot);
 			adc(memory[address], &(mch->A), &(mch->P));
 			mch->pc += 2;
+			mch->cycle += 2;
 			break;
 		}
 
@@ -222,6 +234,7 @@ void execute_cpu(machine* mch)
 			uint16_t address = (((uint16_t)top << 8) | bot);
 			adc(memory[address], &(mch->A), &(mch->P));
 			mch->pc += 2;
+			mch->cycle += 2;
 			break;
 		}
 
@@ -230,20 +243,24 @@ void execute_cpu(machine* mch)
 			fprintf(stdout, "and immediate\n");
 			and(opcode[1], &(mch->A), &(mch->P));
 			mch->pc += 1;
+			mch->cycle += 2;
 			break;
 
 		case 0x25: // and zero page
 			fprintf(stdout, "and zero page\n");
+			mch->cycle += 2;
 			break;
 
 		case 0x35: // and zero page, offset by X
 			fprintf(stdout, "and zp, x\n");
+			mch->cycle += 2;
 			break;
 
 		case 0x2D: // and absolute
 			fprintf(stdout, "and absolute\n");
 			and(memory[opcode[1]], &(mch->A), &(mch->P));
 			mch->pc += 1;
+			mch->cycle += 3;
 			break;
 
 		case 0x3D: // and absolute, offset by X
@@ -251,6 +268,7 @@ void execute_cpu(machine* mch)
 			adc(mch->X, &(opcode[1]), &(mch->P));
 			and(memory[opcode[1]], &(mch->A), &(mch->P));
 			mch->pc += 1;
+			mch->cycle += 3;
 			break;
 
 		case 0x39: // and absolute, offset by Y
@@ -258,6 +276,7 @@ void execute_cpu(machine* mch)
 			adc(mch->Y, &(opcode[1]), &(mch->P));
 			and(memory[opcode[1]], &(mch->A), &(mch->P));
 			mch->pc += 1;
+			mch->cycle += 3;
 			break;
 
 		case 0x21: // and indirect, offset by X
@@ -269,6 +288,7 @@ void execute_cpu(machine* mch)
 			uint16_t address = (((uint16_t)top << 8) | bot);
 			and(memory[address], &(mch->A), &(mch->P));
 			mch->pc += 2;
+			mch->cycle += 2;
 			break;
 		}
 
@@ -281,29 +301,41 @@ void execute_cpu(machine* mch)
 			uint16_t address = (((uint16_t)top << 8) | bot);
 			and(memory[address], &(mch->A), &(mch->P));
 			mch->pc += 2;
+			mch->cycle += 2;
 			break;
 		}
 
 		/* ASL - arithmetic shift left for memory or accumulator */
 		case 0x0A: // accumulator
+			mch->cycle += 2;
 			break;
 		case 0x06: // zero page
+			mch->cycle += 5;
 			break;
 		case 0x16: // zero page, offset by X
+			mch->cycle += 6;
 			break;
 		case 0x0E: // absolute
+			mch->cycle += 6;
 			break;
 		case 0x1E: // absolute, offset by X
+			mch->cycle += 7;
 			break;
 
-	mch->pc += 1; // advance program counter
+		default:
+			fprintf(stdout, "unimplemented opcode!\n");
+			exit(1);
+			break;
+
+	mch->pc += 1; // advance progmemory counter
 	}
 }
+
 
 int main(int argc, char* argv[])
 {
 	char running = 1; // avoid compiler treating a constant 1 as a variable, temporarily 0
-/*
+
 	FILE* fp;
 	fp = fopen(argv[1], "r");
 
@@ -311,7 +343,6 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "Could not open file '%s'. Exiting.\n", argv[1]);
 		exit(-1);
 	}
-	*/
 
 	machine* mch = (machine*) malloc(sizeof(mch));
 
@@ -320,43 +351,59 @@ int main(int argc, char* argv[])
 		exit(-2);
 	}
 
-	mch->memory = (uint8_t*)malloc(100 * sizeof(uint8_t));
-
+	mch->memory = (uint8_t*)malloc(65536 * sizeof(uint8_t)); // 2 kB internal memory
 	if (mch->memory == NULL) {
 		fprintf(stderr, "Could not allocate memory. Exiting. \n");
 		exit(-2);
 	}
 
 	mch->P = 0b00001000; // bit 5 is 1 at all times
+	mch->cycle = 0;
 
-	/* Testing zone */
-	mch->memory[0] = 0xEA; 
-	mch->memory[1] = 0x69; 
-	mch->memory[2] = 0xFF; 
-	mch->memory[3] = 0x61; 
-	mch->memory[4] = 0x00; 
-	mch->memory[5] = 0x01; 
-	mch->memory[6] = 0x61;
-	mch->memory[7] = 0;
-	mch->memory[8] = 1;
-	int len = 8;
-	int i;
+	// load the rom into memory
+	int8_t ch;
+	int8_t opcode = 0;
+	char len = 0;
+	int i = 0;
 
-	for (i = 0; i < len; i++) {
-		execute_cpu(mch);
+	while (1)
+	{
+		ch = fgetc(fp);
+		if (feof(fp)) {
+			break;
+		}
+		// we have to do this 2 times
+		if (!(isdigit(ch)) && !(isalpha(ch)))
+			continue;
+		if (isalpha(ch)){
+			ch = toupper(ch);
+			if (ch > 'F')
+				continue;
+		}
+
+		if (isalpha(ch))
+			ch = ch - 55;
+		else
+			ch = ch - 48;
+
+		if (len == 0) {
+			opcode |= (ch << 4);
+			len++;
+		} else {
+			opcode |= ch;
+			mch->memory[i++] = opcode;
+			opcode = 0;
+			len--;
+		}		
 	}
 
-/*
 	// main loop. run while cpu is running	
 	while(running){
-		execute_cpu(mch);
-		generate_interrupts();
-		emulate_graphics();
-		emulate_sound();
-		time_sync();
+		execute_cpu(mch); 
+		printf("cpu cycle: %d\n", mch->cycle);
 	}
-	*/
 
 	free(mch->memory);
 	free(mch);
+	fclose(fp);
 }
