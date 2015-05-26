@@ -327,7 +327,7 @@ void execute_cpu(machine* mch)
 			exit(1);
 			break;
 
-	mch->pc += 1; // advance progmemory counter
+	mch->pc += 1; // advance program counter
 	}
 }
 
@@ -369,16 +369,21 @@ int main(int argc, char* argv[])
 	while (1)
 	{
 		ch = fgetc(fp);
+
 		if (feof(fp)) {
 			break;
 		}
+
 		// we have to do this 2 times
 		if (!(isdigit(ch)) && !(isalpha(ch)))
 			continue;
+		
 		if (isalpha(ch)){
 			ch = toupper(ch);
+
 			if (ch > 'F')
 				continue;
+
 		}
 
 		if (isalpha(ch))
@@ -399,7 +404,7 @@ int main(int argc, char* argv[])
 
 	// main loop. run while cpu is running	
 	while(running){
-		execute_cpu(mch); 
+		execute_cpu(mch);
 		printf("cpu cycle: %d\n", mch->cycle);
 	}
 
