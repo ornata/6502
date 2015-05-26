@@ -357,7 +357,7 @@ int main(int argc, char* argv[])
 		exit(-2);
 	}
 
-	mch->P = 0b00001000; // bit 5 is 1 at all times
+	mch->P = 0b00010000; // bit 5 is 1 at all times
 	mch->cycle = 0;
 
 	// load the rom into memory
@@ -377,7 +377,7 @@ int main(int argc, char* argv[])
 		// we have to do this 2 times
 		if (!(isdigit(ch)) && !(isalpha(ch)))
 			continue;
-		
+
 		if (isalpha(ch)){
 			ch = toupper(ch);
 
