@@ -599,6 +599,48 @@ void execute_cpu(machine* mch)
 	}
 }
 
+// read ROM into machine's memory
+void read_rom (uint8_t* memory, FILE* fp)
+{
+	char running = 1;
+	char len = 0;
+	char ch;
+	uint8_t mem_entry;
+	int i = 0;
+
+	while(running) {
+
+		ch = fgetc(fp);
+
+		if (feof(fp))
+			break;
+
+		if (!isalpha(ch) && !isdigit(ch))
+			continue;
+
+		if (isalpha(ch) && toupper(ch) > 'F')
+			continue;
+
+		if (isalpha(ch)) {
+			ch = toupper(ch);
+			ch -= 55;
+		} else {
+			ch -= 48;
+		}
+
+		if (len == 0) {
+			mem_entry |= (ch << 4);
+			++len;
+		} else {
+			mem_entry |= ch;
+			memory[i++] = mem_entry;
+			mem_entry = 0;
+			--len;
+		}
+
+	}
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -627,48 +669,6 @@ int main(int argc, char* argv[])
 
 	mch->P = 0b00010000; // bit 5 is 1 at all times
 	mch->cycle = 0;
-
-	// load the rom into memory
-	int8_t ch;
-	int8_t opcode = 0;
-	char len = 0;
-	int i = 0;
-
-	while (1)
-	{
-		ch = fgetc(fp);
-
-		if (feof(fp)) {
-			break;
-		}
-
-		// we have to do this 2 times
-		if (!(isdigit(ch)) && !(isalpha(ch)))
-			continue;
-
-		if (isalpha(ch)){
-			ch = toupper(ch);
-
-			if (ch > 'F')
-				continue;
-
-		}
-
-		if (isalpha(ch))
-			ch = ch - 55;
-		else
-			ch = ch - 48;
-
-		if (len == 0) {
-			opcode |= (ch << 4);
-			len++;
-		} else {
-			opcode |= ch;
-			mch->memory[i++] = opcode;
-			opcode = 0;
-			len--;
-		}		
-	}
 
 	// main loop. run while cpu is running	
 	while(running){
