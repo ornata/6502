@@ -166,6 +166,7 @@ void execute_cpu(machine* mch)
 	uint8_t *memory = mch->memory;
 
 	switch(*opcode){
+		/* NOP */
 		case 0xEA:
 			mch->cycle += 1;
 			break;
@@ -308,18 +309,412 @@ void execute_cpu(machine* mch)
 		/* ASL - arithmetic shift left for memory or accumulator */
 		case 0x0A: // accumulator
 			mch->cycle += 2;
+			exit(1);
 			break;
 		case 0x06: // zero page
 			mch->cycle += 5;
+			exit(1);
 			break;
 		case 0x16: // zero page, offset by X
 			mch->cycle += 6;
+			exit(1);
 			break;
 		case 0x0E: // absolute
 			mch->cycle += 6;
+			exit(1);
 			break;
 		case 0x1E: // absolute, offset by X
 			mch->cycle += 7;
+			exit(1);
+			break;
+
+		/* BCC - Branch on carry clear */
+		case 0x90:
+			mch->cycle += 2; // this should differ based off if branch occurs in the same page
+			exit(1);
+			break;
+
+		/* BCS - Branch on carry set */
+		case 0xB0:
+			mch->cycle += 2; // same as bcc -- page matters
+			exit(1);
+			break;
+
+		/* BEQ - Branch on 0 set */
+		case 0xF0:
+			mch->cycle += 2; // general branching page-ness needs to go here
+			exit(1);
+			break;
+
+		/* BIT - tests bits in memory with accumulator */
+		case 0x24: // zero page
+			mch->cycle += 3;
+			exit(1);
+			break;
+		case 0x2C: //absolute
+			mch->cycle += 4;
+			exit(1);
+			break;
+
+		/* BMI - branch on negative set */
+		case 0x30:
+			mch->cycle += 2; // branch paginess goes here
+			exit(1);
+			break;
+
+		/* BNE - branch on 0 clear */
+		case 0xD0:
+			mch->cycle += 2;
+			exit(1);
+			break;
+
+		/* BPL - branch on negative clear */
+		case 0x10:
+			mch->cycle += 2;
+			exit(1);
+			break;
+
+		/* BRK - force break. cannot be masked by setting I!!*/
+		case 0x00:
+			mch->cycle += 7;
+			exit(1);
+			break;
+
+		/* BVC - branch on overflow clear */
+		case 0x50:
+			mch->cycle += 2; //remember paginess
+			exit(1);
+			break;
+
+		/* BVS - branch on overflow set */
+		case 0x70:
+			mch->cycle += 2; // paginess
+			exit(1);
+			break;
+
+		/* CLC - clear carry */
+		case 0x18:
+			mch->cycle += 2;
+			exit(1);
+			break;
+
+		/* CLI - clear interrupt disable bit */
+		case 0x58:
+			mch->cycle += 2;
+			exit(1);
+			break;
+
+		/* CLV - clear overflow */
+		case 0xB8:
+			mch->cycle += 2;
+			exit(1);
+			break;
+
+		/* CMP - compare memory and accumulator */
+		case 0xC9: // immediate
+			mch->cycle += 2;
+			exit(1);
+			break;
+		case 0xC5: // zero page
+			mch->cycle += 3;
+			exit(1);
+			break;
+		case 0xD5: // zero page, offset by X
+			mch->cycle += 4;
+			exit(1);
+			break;
+		case 0xCD: // absolute
+			mch->cycle += 4;
+			exit(1);
+			break;
+		case 0xDD: // absolute, offset by X
+			mch->cycle += 4; // add 1 if page boundary crossed
+			exit(1);
+			break;
+		case 0xD9: // absolute, offset by Y
+			mch->cycle += 4; // add 1 if pg boundary crossed
+			exit(1);
+			break;
+		case 0xC1: // (indirect, X)
+			mch->cycle += 6;
+			exit(1);
+			break;
+		case 0xD1:
+			mch->cycle += 5; // add 1 if pg boundary crossed
+			exit(1);
+			break;
+
+		/* CPX - compate memory and index X */
+		case 0xE0: // immediate
+			mch->cycle += 2;
+			exit(1);
+			break;
+		case 0xE4: // zero page
+			mch->cycle += 3;
+			exit(1);
+			break;
+		case 0xEC: // absolute
+			mch->cycle += 4;
+			exit(1);
+			break;
+
+		/* CPY - compate memory and index Y */
+		case 0xC0: // immediate
+			mch->cycle += 2;
+			exit(1);
+			break;
+		case 0xC4: // zero page
+			mch->cycle += 3;
+			exit(1);
+			break;
+		case 0xCC: // absolute
+			mch->cycle += 4;
+			exit(1);
+			break;
+
+
+		/* DEC - decrement memory by 1 */
+		case 0xC6: // zero page
+			mch->cycle += 5;
+			exit(1);
+			break;
+		case 0xD6: // zero page, offset by X
+			mch->cycle += 6;
+			exit(1);
+			break;
+		case 0xCE: // absolute
+			mch->cycle += 6;
+			exit(1);
+			break;
+		case 0xDE: // absolute, offset by X
+			mch->cycle += 7;
+			exit(1);
+			break;
+
+		/* DEX - decrement X by 1 */
+		case 0xCA:
+			mch->cycle += 2;
+			exit(1);
+			break;
+
+		/* DEY - decrement Y by 1 */
+		case 0x88:
+			mch->cycle += 2;
+			exit(1);
+			break;
+
+		/* EOR - xor with accumulator */
+		case 0x49: // immediate
+			mch->cycle += 2;
+			exit(1);
+			break;
+		case 0x45: // zero page
+			mch->cycle += 3;
+			exit(1);
+			break;
+		case 0x55: // zero page, offset by X
+			mch->cycle += 4;
+			exit(1);
+			break;
+		case 0x40: // absolute
+			mch->cycle += 4;
+			exit(1);
+			break;
+		case 0x5D: // absolute, offset by X
+			mch->cycle += 4; // +1 if pg boundary crossed
+			exit(1);
+			break;
+		case 0x59: // absolute, offset by Y
+			mch->cycle += 4; // +1 if pg boundary crossed
+			exit(1);
+			break;
+		case 0x41: // (indirect, X)
+			mch->cycle += 6;
+			exit(1);
+			break;
+		case 0x51: // (indirect), Y
+			mch->cycle += 5; // +1 if pg boundary crossed
+			exit(1);
+			break;
+
+		/* INC - increment memory by 1 */
+		case 0xE6: // zero page
+			mch->cycle += 5;
+			exit(1);
+			break;
+		case 0xF6: // zero page, X
+			mch->cycle += 6;
+			exit(1);
+			break;
+		case 0xEE: // absolute
+			mch->cycle += 6;
+			exit(1);
+			break;
+		case 0xFE: // absolute, X
+			mch->cycle += 7;
+			exit(1);
+			break;
+
+		/* INX - increment X index by 1 */
+		case 0xE8:
+			mch->cycle += 2;
+			exit(1);
+			break;
+
+		/* INY - increment Y index by 1 */
+		case 0xC8:
+			mch->cycle += 2;
+			exit(1);
+			break;
+
+		/* JMP - jump to new location */
+		case 0x4C: // absolute
+			mch->cycle += 3;
+			exit(1);
+			break;
+		case 0x6C:
+			mch->cycle += 5;
+			exit(1);
+			break;
+
+		/* JSR - jump and save return address */
+		case 0x20:
+			mch->cycle += 6;
+			exit(1);
+			break;
+
+		/* LDA - load memory into accumulator */
+		case 0xA9: // immediate
+			mch->cycle += 2;
+			exit(1);
+			break;
+		case 0xA5: // zero page
+			mch->cycle += 3;
+			exit(1);
+			break;
+		case 0xB5: // zero page, offset by X
+			mch->cycle += 4;
+			exit(1);
+			break;
+		case 0xAD: // absolute
+			mch->cycle += 4;
+			exit(1);
+			break;
+		case 0xBD: // absolute, offset by X
+			mch->cycle += 4; // +1 if pg boundary crossed
+			exit(1);
+			break;
+		case 0xB9:
+			mch->cycle += 4; // +1 if pg boundary crossed
+			exit(1);
+			break;
+		case 0xA1: // (indirect, X)
+			mch->cycle += 6;
+			exit(1);
+			break;
+		case 0xB1: // (indirect, X)
+			mch->cycle += 5; // +1 if pg boundary crossed
+			exit(1);
+			break;
+
+		/* LDX - load into X */
+		case 0xA2: // immediate
+			mch->cycle += 2;
+			exit(1);
+			break;
+		case 0xA6: // zero page
+			mch->cycle += 3;
+			exit(1);
+			break;
+		case 0xB6: // zero page, Y
+			mch->cycle += 4;
+			exit(1);
+			break;
+		case 0xAE: // absolute
+			mch->cycle += 4;
+			exit(1);
+			break;
+		case 0xBE: // absolute, Y
+			mch->cycle += 4; // +1 if pg boundary crossed
+			exit(1);
+			break;
+
+		/* LDY - load into Y */
+		case 0xA0: // immediate
+			mch->cycle += 2;
+			exit(1);
+			break;
+		case 0xA4: // zero page
+			mch->cycle += 3;
+			exit(1);
+			break;
+		case 0xB4: // zero page, X
+			mch->cycle += 4;
+			exit(1);
+			break;
+		case 0xAC: // absolute
+			mch->cycle += 4;
+			exit(1);
+			break;
+		case 0xBC: // absolute, X
+			mch->cycle += 4; // +1 if pg boundary crossed
+			exit(1);
+			break;
+
+
+		/* LSR - shift mem or accumulator right one bit */
+		case 0x4A: // accumulator
+			mch->cycle += 2;
+			exit(1);
+			break;
+		case 0x46: // zero page
+			mch->cycle += 5;
+			exit(1);
+			break;
+		case 0x56: // zero page, X
+			mch->cycle += 6;
+			exit(1);
+			break;
+		case 0x4E: // absolute
+			mch->cycle += 6;
+			exit(1);
+			break;
+		case 0x5E: // absolute, X
+			mch->cycle += 7;
+			exit(1);
+			break;
+
+		/* ORA - or memory with accumulator */
+		case 0x09: // immediate
+			mch->cycle += 2;
+			exit(1);
+			break;
+		case 0x05: // zero page
+			mch->cycle += 3;
+			exit(1);
+			break;
+		case 0x15: // zero page, X
+			mch->cycle += 4;
+			exit(1);
+			break;
+		case 0x0D: // absolute
+			mch->cycle += 4;
+			exit(1);
+			break;
+		case 0x10: // absolute, X
+			mch->cycle += 4; // +1 on pg crossing
+			exit(1);
+			break;
+		case 0x19: // absolute, Y
+			mch->cycle += 4; // +1 on pg crossing
+			exit(1);
+		case 0x01: // (indirect, X)
+			mch->cycle += 6;
+			exit(1);
+			break;
+		case 0x11: // (indirect), Y
+			mch->cycle += 5;
+			exit(1);
 			break;
 
 		default:
