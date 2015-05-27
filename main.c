@@ -22,6 +22,7 @@ typedef struct machine {
 } machine;
 
 void execute_cpu(machine* m);
+void read_rom (uint8_t* memory, FILE* fp);
 
 // run appropriate function for opcode in memory
 void execute_cpu(machine* mch)
