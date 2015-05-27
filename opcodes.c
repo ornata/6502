@@ -20,6 +20,84 @@ void nop(machine* mch)
 }
 
 /*
+* CMP - compare value with accumulator
+* Z = 1 if value == mch, 0 otherwise
+* N = 1 if accumulator < value
+* N = 0 if accumulator > value
+*/
+
+/* immediate addressing */
+void cmp_imm(uint8_t value, machine* mch)
+{
+	uint8_t cmp = mch->A - value;
+
+	if (cmp == 0) {
+		mch->P = SET_ZERO(mch->P);
+	} else if (cmp > 0) {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = CLEAR_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = SET_NEG(mch->P);
+	}
+
+	mch->pc += 1;
+	mch->cycle += 2;
+}
+
+/*
+* CPX - compare value with X
+* Z = 1 if value == mch, 0 otherwise
+* N = 1 if X < value
+* N = 0 if X > value
+*/
+
+/* immediate addressing */
+void cpx_imm(uint8_t value, machine* mch)
+{
+	uint8_t cmp = mch->X - value;
+
+	if (cmp == 0) {
+		mch->P = SET_ZERO(mch->P);
+	} else if (cmp > 0) {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = CLEAR_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = SET_NEG(mch->P);
+	}
+
+	mch->pc += 1;
+	mch->cycle += 2;
+}
+
+/*
+* CPY - compare value with Y
+* Z = 1 if value == mch, 0 otherwise
+* N = 1 if Y < value
+* N = 0 if Y > value
+*/
+
+/* immediate addressing */
+void cpy_imm(uint8_t value, machine* mch)
+{
+	uint8_t cmp = mch->Y - value;
+
+	if (cmp == 0) {
+		mch->P = SET_ZERO(mch->P);
+	} else if (cmp > 0) {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = CLEAR_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = SET_NEG(mch->P);
+	}
+
+	mch->pc += 1;
+	mch->cycle += 2;
+}
+
+/*
 * DEX - Decrement X
 * Flags affected - Z, N
 */
@@ -206,28 +284,31 @@ void adc_zpx(uint8_t address, machine* mch)
 }
 
 /* absolute addressing */
-void adc_abs(uint8_t address, machine* mch)
-{
+void adc_abs(uint8_t high, uint8_t low, machine* mch)
+{	
+	uint16_t address = (high << 8) | low;
 	adc(mch->memory[address], &(mch->A), &(mch->P));
-	mch->pc += 1;
+	mch->pc += 2;
 	mch->cycle += 3;
 }
 
 /* absolute addressing, offset by the value in X */
-void adc_absx(uint8_t address, machine* mch)
+void adc_absx(uint8_t high, uint8_t low, machine* mch)
 {
-	adc(mch->X, &address, &(mch->P)); // add with carry X to opcode
+	uint16_t address = (high << 8) | low;
+	adc_16(mch->X, &address, &(mch->P)); // add with carry X to opcode
 	adc(mch->memory[address], &(mch->A), &(mch->P));
-	mch->pc += 1;
+	mch->pc += 2;
 	mch->cycle += 3;
 }
 
 /* absolute addressing, offset by the value in Y */
-void adc_absy(uint8_t address, machine* mch)
+void adc_absy(uint8_t high, uint8_t low, machine* mch)
 {
-	adc(mch->Y, &address, &(mch->P)); // add with carry Y to opcode
+	uint16_t address = (high << 8) | low;
+	adc_16(mch->Y, &address, &(mch->P)); // add with carry Y to opcode
 	adc(mch->memory[address], &(mch->A), &(mch->P));
-	mch->pc += 1;
+	mch->pc += 2;
 	mch->cycle += 3;
 }
 
@@ -281,28 +362,31 @@ void and_zpx(uint8_t address, machine* mch)
 }
 
 /* absolute */
-void and_abs(uint8_t address, machine* mch)
+void and_abs(uint8_t high, uint8_t low, machine* mch)
 {
+	uint16_t address = (high << 8) | low;
 	and(mch->memory[address], &(mch->A), &(mch->P));
-	mch->pc += 1;
+	mch->pc += 2;
 	mch->cycle += 3;
 }
 
 /* absolute offset by x */
-void and_absx(uint8_t address, machine* mch)
+void and_absx(uint8_t high, uint8_t low, machine* mch)
 {
-	adc(mch->X, &address, &(mch->P));
+	uint16_t address = (high << 8) | low;
+	adc_16(mch->X, &address, &(mch->P));
 	and(mch->memory[address], &(mch->A), &(mch->P));
-	mch->pc += 1;
+	mch->pc += 2;
 	mch->cycle += 3;
 }
 
 /* absolute offest by y */
-void and_absy(uint8_t address, machine* mch)
+void and_absy(uint8_t high, uint8_t low, machine* mch)
 {
-	adc(mch->Y, &address, &(mch->P));
+	uint16_t address = (high << 8) | low;
+	adc_16(mch->Y, &address, &(mch->P));
 	and(mch->memory[address], &(mch->A), &(mch->P));
-	mch->pc += 1;
+	mch->pc += 2;
 	mch->cycle += 3;
 }
 
@@ -362,5 +446,13 @@ void asl(uint8_t value, uint8_t* dest, uint8_t* P)
 		*P = SET_NEG(*P);
 	else
 		*P = CLEAR_NEG(*P);
+}
+
+/* JMP - set PC to given address */
+void jmp(uint8_t high, uint8_t low, machine* mch)
+{
+	uint16_t address = (high << 8) | low;
+	mch->pc = address-1;
+	mch->cycle += 3;
 }
 

@@ -27,9 +27,9 @@ void execute_cpu(machine* mch)
 		case 0x69: return adc_imm(opcode[1], mch);
 		case 0x65: return adc_zp(opcode[1], mch);
 		case 0x75: return adc_zpx(opcode[1], mch);
-		case 0x6D: return adc_abs(opcode[1], mch);
-		case 0x7D: return adc_absx(opcode[1], mch);
-		case 0x79: return adc_absy(opcode[1], mch);
+		case 0x6D: return adc_abs(opcode[1], opcode[2], mch);
+		case 0x7D: return adc_absx(opcode[1], opcode[2], mch);
+		case 0x79: return adc_absy(opcode[1], opcode[2], mch);
 		case 0x61: return adc_indx(opcode[1], opcode[2], mch);
 		case 0x71: return adc_indy(opcode[1], opcode[2], mch);
 
@@ -37,9 +37,9 @@ void execute_cpu(machine* mch)
 		case 0x29: return and_imm(opcode[1], mch);
 		case 0x25: return and_zp(opcode[1], mch);
 		case 0x35: return and_zpx(opcode[1], mch);
-		case 0x2D: return and_abs(opcode[1], mch);
-		case 0x3D: return and_absx(opcode[1], mch);
-		case 0x39: return and_absy(opcode[1], mch);
+		case 0x2D: return and_abs(opcode[1], opcode[2], mch);
+		case 0x3D: return and_absx(opcode[1], opcode[2], mch);
+		case 0x39: return and_absy(opcode[1], opcode[2], mch);
 		case 0x21: return and_indx(opcode[1], opcode[2], mch);
 		case 0x31: return and_indy(opcode[1], opcode[2], mch);
 
@@ -139,10 +139,7 @@ void execute_cpu(machine* mch)
 		case 0xB8: return clv(mch);
 
 		/* CMP - compare memory and accumulator */
-		case 0xC9: // immediate
-			mch->cycle += 2;
-			exit(1);
-			break;
+		case 0xC9: return cmp_imm(opcode[1], mch);
 		case 0xC5: // zero page
 			mch->cycle += 3;
 			exit(1);
@@ -172,11 +169,8 @@ void execute_cpu(machine* mch)
 			exit(1);
 			break;
 
-		/* CPX - compate memory and index X */
-		case 0xE0: // immediate
-			mch->cycle += 2;
-			exit(1);
-			break;
+		/* CPX - compare memory and index X */
+		case 0xE0: return cpx_imm(opcode[1], mch);
 		case 0xE4: // zero page
 			mch->cycle += 3;
 			exit(1);
@@ -186,11 +180,8 @@ void execute_cpu(machine* mch)
 			exit(1);
 			break;
 
-		/* CPY - compate memory and index Y */
-		case 0xC0: // immediate
-			mch->cycle += 2;
-			exit(1);
-			break;
+		/* CPY - compare memory and index Y */
+		case 0xC0: return cpy_imm(opcode[1], mch);
 		case 0xC4: // zero page
 			mch->cycle += 3;
 			exit(1);
@@ -290,10 +281,7 @@ void execute_cpu(machine* mch)
 			break;
 
 		/* JMP - jump to new location */
-		case 0x4C: // absolute
-			mch->cycle += 3;
-			exit(1);
-			break;
+		case 0x4C: jmp(opcode[1], opcode[2], mch);
 		case 0x6C:
 			mch->cycle += 5;
 			exit(1);
