@@ -9,6 +9,7 @@
 #define INTERRUPT_PERIOD 100 // placeholder
 #define DEBUG 1
 
+// structure that contains all info about the machine at current time
 typedef struct machine {
 	uint8_t A; // accumulator
 	uint8_t X; // x index
@@ -20,19 +21,9 @@ typedef struct machine {
 	int cycle;
 } machine;
 
-
-void adc(uint8_t value, uint8_t* dest, uint8_t* P);
-void and(uint8_t value, uint8_t* A, uint8_t* P);
-void asl(uint8_t value, uint8_t* dest, uint8_t* P);
 void execute_cpu(machine* m);
-void generate_interrupts();
-void emulate_sound();
-void emulate_graphics();
-void time_sync();
 
-
-/********** DEBUGGING FUNCTIONS ***********/
-
+// run appropriate function for opcode in memory
 void execute_cpu(machine* mch)
 {
 	uint8_t *opcode = &mch->memory[mch->pc];
