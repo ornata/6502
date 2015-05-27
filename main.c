@@ -130,22 +130,13 @@ void execute_cpu(machine* mch)
 			break;
 
 		/* CLC - clear carry */
-		case 0x18:
-			mch->cycle += 2;
-			exit(1);
-			break;
+		case 0x18: return clc(mch);
 
 		/* CLI - clear interrupt disable bit */
-		case 0x58:
-			mch->cycle += 2;
-			exit(1);
-			break;
+		case 0x58: return cli(mch);
 
 		/* CLV - clear overflow */
-		case 0xB8:
-			mch->cycle += 2;
-			exit(1);
-			break;
+		case 0xB8: return clv(mch);
 
 		/* CMP - compare memory and accumulator */
 		case 0xC9: // immediate
@@ -229,16 +220,10 @@ void execute_cpu(machine* mch)
 			break;
 
 		/* DEX - decrement X by 1 */
-		case 0xCA:
-			mch->cycle += 2;
-			exit(1);
-			break;
+		case 0xCA: return dex(mch);
 
 		/* DEY - decrement Y by 1 */
-		case 0x88:
-			mch->cycle += 2;
-			exit(1);
-			break;
+		case 0x88: return dey(mch);
 
 		/* EOR - xor with accumulator */
 		case 0x49: // immediate

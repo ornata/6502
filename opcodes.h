@@ -2,6 +2,11 @@
 #define OPCODES_H
 
 void nop(machine* mch);
+void clv(machine* m);
+void cli(machine* m);
+void clc(machine* mch);
+void dex(machine* mch);
+void dey(machine* mch);
 
 void adc(uint8_t value, uint8_t* dest, uint8_t* P);
 void adc_16(uint8_t value, uint16_t* dest, uint8_t* P);

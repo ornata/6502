@@ -2,18 +2,86 @@
 #include "debug_io.h"
 #include "machine.h"
 
-#define SET_CARRY(x)   x | 0b00010001
+#define SET_CARRY(x)   x | 0b00100001
 #define CLEAR_CARRY(x) x & 0b11111110
-#define SET_ZERO(x)    x | 0b00010010
+#define SET_ZERO(x)    x | 0b00100010
 #define CLEAR_ZERO(x)  x & 0b11111101
-#define SET_OVERFLOW(x) x | 0b01010000
+#define SET_OVERFLOW(x) x | 0b01100000
 #define CLEAR_OVERFLOW(x) x & 0b10111111
-#define SET_NEG(x) x | 0b10010000
+#define SET_NEG(x) x | 0b10100000
 #define CLEAR_NEG(x) x & 0b01111111
+#define SET_INTERRUPT(x) x | 0b00100100
+#define CLEAR_INTERRUPT(x) x & 0b11111011
 
+/* NOP - do nothing */
 void nop(machine* mch)
 {
 	mch->cycle += 1;
+}
+
+/*
+* DEX - Decrement X
+* Flags affected - Z, N
+*/
+void dex(machine* mch)
+{
+	uint8_t dec = mch->X - 1;
+
+	if (dec < 0)
+		mch->P = SET_NEG(mch->P);
+	else
+		mch->P = CLEAR_NEG(mch->P);
+
+	if (dec == 0)
+		mch->P = SET_ZERO(mch->P);
+	else
+		mch->P = CLEAR_ZERO(mch->P);
+
+	mch->X = dec;
+	mch->cycle += 2;
+}
+
+/*
+* DEX - Decrement Y
+* Flags affected - Z, N
+*/
+void dey(machine* mch)
+{
+	uint8_t dec = mch->Y - 1;
+
+	if (dec < 0)
+		mch->P = SET_NEG(mch->P);
+	else
+		mch->P = CLEAR_NEG(mch->P);
+
+	if (dec == 0)
+		mch->P = SET_ZERO(mch->P);
+	else
+		mch->P = CLEAR_ZERO(mch->P);
+
+	mch->Y = dec;
+	mch->cycle += 2;
+}
+
+/* CLC - clear carry */
+void clc(machine* mch)
+{
+	mch->P = CLEAR_CARRY(mch->P);
+	mch->cycle += 2;
+}
+
+ /* CLV - clear overflow */
+void clv(machine* mch)
+{
+	mch->P = CLEAR_OVERFLOW(mch->P);
+	mch->cycle += 2;
+}
+
+/* CLI - clear interrupt */
+void cli(machine* mch)
+{
+	mch->P = CLEAR_INTERRUPT(mch->P);
+	mch->cycle += 2;
 }
 
 /*
