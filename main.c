@@ -2,24 +2,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include "machine.h"
 #include "opcodes.h"
 #include "debug_io.h"
 
 #define INIT_PC 0 // placeholder
 #define INTERRUPT_PERIOD 100 // placeholder
 #define DEBUG 1
-
-// structure that contains all info about the machine at current time
-typedef struct machine {
-	uint8_t A; // accumulator
-	uint8_t X; // x index
-	uint8_t Y; // y index
-	uint8_t P; // processor status
-	uint8_t S; // stack
-	uint16_t pc; // program counter
-	uint8_t *memory;
-	int cycle;
-} machine;
 
 void execute_cpu(machine* m);
 void read_rom (uint8_t* memory, FILE* fp);
@@ -32,144 +21,27 @@ void execute_cpu(machine* mch)
 
 	switch(*opcode){
 		/* NOP */
-		case 0xEA:
-			mch->cycle += 1;
-			break;
+		case 0xEA: return nop(mch);
 
 		/* Add: add contents of memory location to accumulator with carry */
-		case 0x69: // adc immediate
-			adc(opcode[1], &(mch->A), &(mch->P));
-			mch->pc += 1;
-			mch->cycle += 2;
-			break;
-
-		case 0x65: // adc zero page
-			fprintf(stdout, "Add: zero page\n");
-			mch->pc += 1;
-			mch->cycle += 2;
-			break;
-
-		case 0x75: // adc zero page, offset by X
-			fprintf(stdout, "Add: zero page, X\n");
-			mch->cycle += 2;
-			break;
-
-		case 0x6D: // adc absolute
-		{
-			adc(memory[opcode[1]], &(mch->A), &(mch->P));
-			mch->pc += 1;
-			mch->cycle += 3;
-			break;
-		}
-
-		case 0x7D: // adc absolute,x
-		{
-			adc(mch->X, &(opcode[1]), &(mch->P)); // add with carry X to opcode
-			adc(memory[opcode[1]], &(mch->A), &(mch->P));
-			mch->pc += 1;
-			mch->cycle += 3;
-			break;
-		}
-
-		case 0x79: // adc absolute,y
-		{
-			adc(mch->Y, &(opcode[1]), &(mch->P)); // add with carry Y to opcode
-			adc(memory[opcode[1]], &(mch->A), &(mch->P));
-			mch->pc += 1;
-			mch->cycle += 3;
-			break;
-		}
-
-		case 0x61: // adc indirect x
-		{
-			uint8_t top = memory[opcode[1]];
-			uint8_t bot = memory[opcode[2]];
-			adc(mch->X, &top, &(mch->P));
-			uint16_t address = (((uint16_t)top << 8) | bot);
-			adc(memory[address], &(mch->A), &(mch->P));
-			mch->pc += 2;
-			mch->cycle += 2;
-			break;
-		}
-
-		case 0x71: // adc indirect y
-		{
-			uint8_t top = memory[opcode[1]];
-			uint8_t bot = memory[opcode[2]];
-			adc(mch->Y, &top, &(mch->P));
-			uint16_t address = (((uint16_t)top << 8) | bot);
-			adc(memory[address], &(mch->A), &(mch->P));
-			mch->pc += 2;
-			mch->cycle += 2;
-			break;
-		}
+		case 0x69: return adc_imm(opcode[1], mch);
+		case 0x65: return adc_zp(opcode[1], mch);
+		case 0x75: return adc_zpx(opcode[1], mch);
+		case 0x6D: return adc_abs(opcode[1], mch);
+		case 0x7D: return adc_absx(opcode[1], mch);
+		case 0x79: return adc_absy(opcode[1], mch);
+		case 0x61: return adc_indx(opcode[1], opcode[2], mch);
+		case 0x71: return adc_indy(opcode[1], opcode[2], mch);
 
 		/* AND - and accumulator with memory */
-		case 0x29: // and immediate
-			fprintf(stdout, "and immediate\n");
-			and(opcode[1], &(mch->A), &(mch->P));
-			mch->pc += 1;
-			mch->cycle += 2;
-			break;
-
-		case 0x25: // and zero page
-			fprintf(stdout, "and zero page\n");
-			mch->cycle += 2;
-			break;
-
-		case 0x35: // and zero page, offset by X
-			fprintf(stdout, "and zp, x\n");
-			mch->cycle += 2;
-			break;
-
-		case 0x2D: // and absolute
-			fprintf(stdout, "and absolute\n");
-			and(memory[opcode[1]], &(mch->A), &(mch->P));
-			mch->pc += 1;
-			mch->cycle += 3;
-			break;
-
-		case 0x3D: // and absolute, offset by X
-			fprintf(stdout, "and abs, x\n");
-			adc(mch->X, &(opcode[1]), &(mch->P));
-			and(memory[opcode[1]], &(mch->A), &(mch->P));
-			mch->pc += 1;
-			mch->cycle += 3;
-			break;
-
-		case 0x39: // and absolute, offset by Y
-			fprintf(stdout, "and abs, y\n");
-			adc(mch->Y, &(opcode[1]), &(mch->P));
-			and(memory[opcode[1]], &(mch->A), &(mch->P));
-			mch->pc += 1;
-			mch->cycle += 3;
-			break;
-
-		case 0x21: // and indirect, offset by X
-		{
-			fprintf(stdout, "and (oper, x)\n");
-			uint8_t top = memory[opcode[1]];
-			uint8_t bot = memory[opcode[2]];
-			adc(mch->X, &top, &(mch->P));
-			uint16_t address = (((uint16_t)top << 8) | bot);
-			and(memory[address], &(mch->A), &(mch->P));
-			mch->pc += 2;
-			mch->cycle += 2;
-			break;
-		}
-
-		case 0x31: // and indirect, offset by Y
-		{
-			fprintf(stdout, "and (oper), y\n");
-			uint8_t top = memory[opcode[1]];
-			uint8_t bot = memory[opcode[2]];
-			adc(mch->Y, &top, &(mch->P));
-			uint16_t address = (((uint16_t)top << 8) | bot);
-			and(memory[address], &(mch->A), &(mch->P));
-			mch->pc += 2;
-			mch->cycle += 2;
-			break;
-		}
+		case 0x29: return and_imm(opcode[1], mch);
+		case 0x25: return and_zp(opcode[1], mch);
+		case 0x35: return and_zpx(opcode[1], mch);
+		case 0x2D: return and_abs(opcode[1], mch);
+		case 0x3D: return and_absx(opcode[1], mch);
+		case 0x39: return and_absy(opcode[1], mch);
+		case 0x21: return and_indx(opcode[1], opcode[2], mch);
+		case 0x31: return and_indy(opcode[1], opcode[2], mch);
 
 		/* ASL - arithmetic shift left for memory or accumulator */
 		case 0x0A: // accumulator
@@ -586,8 +458,6 @@ void execute_cpu(machine* mch)
 			fprintf(stdout, "unimplemented opcode!\n");
 			exit(1);
 			break;
-
-	mch->pc += 1; // advance program counter
 	}
 }
 
@@ -633,7 +503,6 @@ void read_rom (uint8_t* memory, FILE* fp)
 	}
 }
 
-
 int main(int argc, char* argv[])
 {
 	char running = 1; // avoid compiler treating a constant 1 as a variable, temporarily 0
@@ -647,7 +516,7 @@ int main(int argc, char* argv[])
 	}
 
 	machine* mch = (machine*) malloc(sizeof(mch));
-
+	
 	if (mch == NULL) {
 		fprintf(stderr, "Could not allocate memory. Exiting. \n");
 		exit(-2);
@@ -666,6 +535,7 @@ int main(int argc, char* argv[])
 	// main loop. run while cpu is running	
 	while(running){
 		execute_cpu(mch);
+		mch->pc += 1; // advance program counter
 		printf("cpu cycle: %d\n", mch->cycle);
 	}
 
