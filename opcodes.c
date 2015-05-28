@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "debug_io.h"
+#include "io.h"
 #include "machine.h"
 
 #define SET_CARRY(x)   x | 0b00100001

@@ -1,6 +1,10 @@
 #ifndef OPCODES_H
 #define OPCODES_H
 
+#include <stdint.h>
+#include "io.h"
+#include "machine.h"
+
 void nop(machine* mch);
 void clv(machine* m);
 void cli(machine* m);
