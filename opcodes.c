@@ -1,6 +1,3 @@
-#include <stdint.h>
-#include "io.h"
-#include "machine.h"
 
 #define SET_CARRY(x)   x | 0b00100001
 #define CLEAR_CARRY(x) x & 0b11111110
