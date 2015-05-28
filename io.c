@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <stdint.h>
+#include "io.h"
 #include "machine.h"
 
 /* Print the bits in an uint8_t */
