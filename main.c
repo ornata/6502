@@ -4,14 +4,13 @@
 #include <ctype.h>
 #include "machine.h"
 #include "opcodes.h"
-#include "debug_io.h"
+#include "io.h"
 
 #define INIT_PC 0 // placeholder
 #define INTERRUPT_PERIOD 100 // placeholder
 #define DEBUG 1
 
 void execute_cpu(machine* m);
-void read_rom (uint8_t* memory, FILE* fp);
 
 // run appropriate function for opcode in memory
 void execute_cpu(machine* mch)
@@ -431,48 +430,6 @@ void execute_cpu(machine* mch)
 			fprintf(stdout, "unimplemented opcode!\n");
 			exit(1);
 			break;
-	}
-}
-
-// read ROM into machine's memory
-void read_rom (uint8_t* memory, FILE* fp)
-{
-	char running = 1;
-	char len = 0;
-	char ch;
-	uint8_t mem_entry;
-	int i = 0;
-
-	while(running) {
-
-		ch = fgetc(fp);
-
-		if (feof(fp))
-			break;
-
-		if (!isalpha(ch) && !isdigit(ch))
-			continue;
-
-		if (isalpha(ch) && toupper(ch) > 'F')
-			continue;
-
-		if (isalpha(ch)) {
-			ch = toupper(ch);
-			ch -= 55;
-		} else {
-			ch -= 48;
-		}
-
-		if (len == 0) {
-			mem_entry |= (ch << 4);
-			++len;
-		} else {
-			mem_entry |= ch;
-			memory[i++] = mem_entry;
-			mem_entry = 0;
-			--len;
-		}
-
 	}
 }
 
