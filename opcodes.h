@@ -35,9 +35,14 @@ void and_indy(uint8_t top, uint8_t bot, machine* mch);
 
 void asl(uint8_t value, uint8_t* dest, uint8_t* P);
 
+void branch_set(uint8_t high, uint8_t low, machine* mch, int8_t bit);
+void branch_clear(uint8_t high, uint8_t low, machine* mch, int8_t bit);
+
 void cmp_imm(uint8_t value, machine* mch);
 void cpx_imm(uint8_t value, machine* mch);
 void cpy_imm(uint8_t value, machine* mch);
+
+char page_check(uint16_t addr1, uint16_t addr2);
 
 void jmp(uint8_t high, uint8_t low, machine* mch);
 

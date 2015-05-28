@@ -1,3 +1,6 @@
+#include <stdint.h>
+#include "io.h"
+#include "machine.h"
 
 #define SET_CARRY(x)   x | 0b00100001
 #define CLEAR_CARRY(x) x & 0b11111110
@@ -9,6 +12,59 @@
 #define CLEAR_NEG(x) x & 0b01111111
 #define SET_INTERRUPT(x) x | 0b00100100
 #define CLEAR_INTERRUPT(x) x & 0b11111011
+
+/* page_check - helper function that checks if addr1 and 2 are on the same page
+*	returns 1 if they are on the same page
+*	returns 0 if they are on different pages
+*	returns 2 if one lies on a page boundary
+* page size = 256 bytes. => 
+*/
+char page_check(uint16_t addr1, uint16_t addr2)
+{
+	if (((uint32_t)addr1 - (uint32_t)addr2) > 0xFFFF || ((uint32_t)addr2 - (uint32_t)addr1) > 0xFFFF) {
+		return 0;
+	} else if  (((uint32_t)addr1 - (uint32_t)addr2) == -1 || ((uint32_t)addr2 - (uint32_t)addr1) == -1) {
+		return 2;
+	} else {
+		return 1;
+	}
+
+}
+
+/* Branch - branch depending on if the value specified in bit is set. */
+void branch_set(uint8_t high, uint8_t low, machine* mch, int8_t bit)
+{
+	// is the flag specified in "bit" set?
+	if ((mch->P & bit) != 0) {
+		// evaluate address
+		uint16_t address = (high << 8) | low;
+		if (page_check(address, mch->pc) != 1) {
+			mch->cycle += 1;
+		}
+		mch->pc = address - 1;
+		mch->cycle += 1;
+	}
+
+	mch->cycle += 2;
+}
+
+/* Branch - branch depending on if the value specified in bit is clear. */
+void branch_clear(uint8_t high, uint8_t low, machine* mch, int8_t bit)
+{
+	// is the flag specified in "bit" clear?
+	if ((mch->P & bit) == 0) {
+		// evaluate address
+		uint16_t address = (high << 8) | low;
+		if (page_check(address, mch->pc) != 1) {
+			mch->cycle += 1;
+		}
+		mch->pc = address - 1;
+		mch->cycle += 1;
+	}
+
+	mch->cycle += 2;
+}
+
 
 /* NOP - do nothing */
 void nop(machine* mch)

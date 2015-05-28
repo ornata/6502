@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <ctype.h>
 #include "machine.h"
 #include "opcodes.h"
 #include "io.h"
@@ -65,22 +64,11 @@ void execute_cpu(machine* mch)
 			break;
 
 		/* BCC - Branch on carry clear */
-		case 0x90:
-			mch->cycle += 2; // this should differ based off if branch occurs in the same page
-			exit(1);
-			break;
-
+		case 0x90: return branch_clear(opcode[1], opcode[2], mch, 0b00000001);
 		/* BCS - Branch on carry set */
-		case 0xB0:
-			mch->cycle += 2; // same as bcc -- page matters
-			exit(1);
-			break;
-
+		case 0xB0: return branch_set(opcode[1], opcode[2], mch, 0b00000001);
 		/* BEQ - Branch on 0 set */
-		case 0xF0:
-			mch->cycle += 2; // general branching page-ness needs to go here
-			exit(1);
-			break;
+		case 0xF0: return branch_set(opcode[1], opcode[2], mch, 0b00000010);
 
 		/* BIT - tests bits in memory with accumulator */
 		case 0x24: // zero page
@@ -93,22 +81,11 @@ void execute_cpu(machine* mch)
 			break;
 
 		/* BMI - branch on negative set */
-		case 0x30:
-			mch->cycle += 2; // branch paginess goes here
-			exit(1);
-			break;
-
+		case 0x30: return branch_set(opcode[1], opcode[2], mch, 0b10000000);
 		/* BNE - branch on 0 clear */
-		case 0xD0:
-			mch->cycle += 2;
-			exit(1);
-			break;
-
+		case 0xD0: return branch_clear(opcode[1], opcode[2], mch, 0b00000010);
 		/* BPL - branch on negative clear */
-		case 0x10:
-			mch->cycle += 2;
-			exit(1);
-			break;
+		case 0x10: return branch_clear(opcode[1], opcode[2], mch, 0b10000000);
 
 		/* BRK - force break. cannot be masked by setting I!!*/
 		case 0x00:
@@ -117,16 +94,10 @@ void execute_cpu(machine* mch)
 			break;
 
 		/* BVC - branch on overflow clear */
-		case 0x50:
-			mch->cycle += 2; //remember paginess
-			exit(1);
-			break;
+		case 0x50: return branch_clear(opcode[1], opcode[2], mch, 0b01000000);
 
 		/* BVS - branch on overflow set */
-		case 0x70:
-			mch->cycle += 2; // paginess
-			exit(1);
-			break;
+		case 0x70: return branch_set(opcode[1], opcode[2], mch, 0b01000000);
 
 		/* CLC - clear carry */
 		case 0x18: return clc(mch);
