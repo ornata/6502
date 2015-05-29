@@ -40,6 +40,10 @@ void asl_zpx(uint8_t address, machine* mch);
 void asl_abs(uint8_t top, uint8_t bot, machine* mch);
 void asl_absx(uint8_t high, uint8_t low, machine* mch);
 
+void bit(uint8_t pattern, uint8_t value, uint8_t* P);
+void bit_zp(uint8_t pat_adr, machine* mch);
+void bit_abs(uint8_t top, uint8_t bot, machine* mch);
+
 void branch_set(uint8_t high, uint8_t low, machine* mch, int8_t bit);
 void branch_clear(uint8_t high, uint8_t low, machine* mch, int8_t bit);
 

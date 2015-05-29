@@ -788,3 +788,32 @@ void jmp(uint8_t high, uint8_t low, machine* mch)
 	mch->cycle += 3;
 }
 
+/* BIT - check if the bits in A are set in the value at some memory address
+* Only impacts zero flag. Does not store a result. 
+*/
+void bit(uint8_t pattern, uint8_t value, uint8_t* P)
+{
+	// one or more bits set?
+	if ((pattern & value) != 0) {
+		*P = CLEAR_ZERO(*P);
+	} else {
+		*P = SET_ZERO(*P);
+	}
+
+}
+
+void bit_zp(uint8_t pat_adr, machine* mch)
+{
+	bit(mch->A, mch->memory[pat_adr], &(mch->P));
+	mch->cycle += 3;
+	mch->pc += 1;
+}
+
+void bit_abs(uint8_t top, uint8_t bot, machine* mch)
+{
+	uint16_t adr = ((uint16_t)top << 8) | bot;
+	bit(mch->A, mch->memory[adr], &(mch->P));
+	mch->cycle += 4;
+	mch->pc += 2;
+}
+

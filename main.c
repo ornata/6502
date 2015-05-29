@@ -58,14 +58,8 @@ void execute_cpu(machine* mch)
 		case 0xF0: return branch_set(opcode[2], opcode[1], mch, 0b00000010);
 
 		/* BIT - tests bits in memory with accumulator */
-		case 0x24: // zero page
-			mch->cycle += 3;
-			exit(1);
-			break;
-		case 0x2C: //absolute
-			mch->cycle += 4;
-			exit(1);
-			break;
+		case 0x24: return bit_zp(opcode[1], mch);
+		case 0x2C: return bit_abs(opcode[2], opcode[1], mch);
 
 		/* BMI - branch on negative set */
 		case 0x30: return branch_set(opcode[2], opcode[1], mch, 0b10000000);
