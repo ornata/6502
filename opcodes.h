@@ -55,6 +55,12 @@ void cmp_zpx(uint8_t address, machine* mch);
 void cmp_abs(uint8_t high, uint8_t low, machine* mch);
 void cmp_absx(uint8_t high, uint8_t low, machine* mch);
 
+void dec(uint8_t* value, uint8_t* P);
+void dec_zp(uint8_t address, machine* mch);
+void dec_zpx(uint8_t address, machine* mch);
+void dec_abs(uint8_t top, uint8_t bot, machine* mch);
+void dec_absx(uint8_t top, uint8_t bot, machine* mch);
+
 void or(uint8_t value, uint8_t* A, uint8_t* P);
 void or_imm(uint8_t value, machine* mch);
 void or_zp(uint8_t address, machine* mch);

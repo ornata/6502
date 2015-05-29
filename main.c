@@ -135,22 +135,10 @@ void execute_cpu(machine* mch)
 
 
 		/* DEC - decrement memory by 1 */
-		case 0xC6: // zero page
-			mch->cycle += 5;
-			exit(1);
-			break;
-		case 0xD6: // zero page, offset by X
-			mch->cycle += 6;
-			exit(1);
-			break;
-		case 0xCE: // absolute
-			mch->cycle += 6;
-			exit(1);
-			break;
-		case 0xDE: // absolute, offset by X
-			mch->cycle += 7;
-			exit(1);
-			break;
+		case 0xC6: return dec_zp(opcode[1], mch);
+		case 0xD6: return dec_zpx(opcode[1], mch);
+		case 0xCE: return dec_abs(opcode[2], opcode[1], mch);
+		case 0xDE: return dec_absx(opcode[2], opcode[1], mch);
 
 		/* DEX - decrement X by 1 */
 		case 0xCA: return dex(mch);

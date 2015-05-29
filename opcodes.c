@@ -817,3 +817,53 @@ void bit_abs(uint8_t top, uint8_t bot, machine* mch)
 	mch->pc += 2;
 }
 
+/* DEC - decrement value at specified memory location by 1
+* Impacts zero and negative flags
+*/
+
+void dec(uint8_t* value, uint8_t* P)
+{
+	*value -= 1;
+	if (*value == 0) {
+		*P = SET_ZERO(*P);
+	}
+
+	if (*value < 0) {
+		*P = SET_NEG(*P);
+	}
+}
+
+void dec_zp(uint8_t address, machine* mch)
+{	
+	dec(&(mch->memory[address]), &(mch->P));
+	mch->cycle += 5;
+	mch->pc += 1;
+}
+
+void dec_zpx(uint8_t address, machine* mch)
+{	
+	uint16_t adr = (uint16_t) address;
+	adc_16(mch->X, &adr, &(mch->P));
+	dec(&(mch->memory[adr]), &(mch->P));
+	mch->cycle += 6;
+	mch->pc += 1;
+}
+
+void dec_abs(uint8_t top, uint8_t bot, machine* mch)
+{	
+	uint16_t adr = ((uint16_t) top << 8) | bot;
+	dec(&(mch->memory[adr]), &(mch->P));
+	mch->cycle += 6;
+	mch->pc += 2;
+}
+
+void dec_absx(uint8_t top, uint8_t bot, machine* mch)
+{	
+	uint16_t adr = ((uint16_t) top << 8) | bot;
+	adc_16(mch->X, &adr, &(mch->P));
+	dec(&(mch->memory[adr]), &(mch->P));
+	mch->cycle += 7;
+	mch->pc += 2;
+}
+
+
