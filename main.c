@@ -20,8 +20,25 @@ void execute_cpu(machine* mch)
 	fprintf(stdout, "opcode: %x\n", opcode[0]);
 
 	switch(*opcode) {
+
+		/* KIL. Most of these are illegal instructions. */
+		case 0x02: exit(123);
+		case 0x12: exit(123);
+		case 0x22: exit(123);
+		case 0x32: exit(123);
+		case 0x42: exit(123);
+		case 0x52: exit(123);
+		case 0x62: exit(123);
+		case 0x72: exit(123);
+		case 0x92: exit(123);
+		case 0xB2: exit(123);
+		case 0xD2: exit(123);
+		case 0xF2: exit(123);
+
 		/* NOP */
-		case 0xEA: return nop(mch);
+		case 0xEA: return nop(mch, 1);
+		case 0x1A: return nop(mch, 2); // illegal instruction (nop with 2 cycles)
+		case 0x7A: return nop(mch, 2); // same as above
 
 		/* Add: add contents of memory location to accumulator with carry */
 		case 0x69: return adc_imm(opcode[1], mch);
@@ -332,7 +349,7 @@ int main(int argc, char* argv[])
 	char running = 1; // avoid compiler treating a constant 1 as a variable, temporarily 0
 
 	FILE* fp;
-	fp = fopen(argv[1], "r");
+	fp = fopen(argv[1], "rb");
 
 	if (fp == NULL) {
 		fprintf(stderr, "Could not open file '%s'. Exiting.\n", argv[1]);
@@ -361,7 +378,6 @@ int main(int argc, char* argv[])
 	// main loop. run while cpu is running
 	while(running){
 		execute_cpu(mch);
-		mch->pc += 1; // advance program counter
 		printf("cpu cycle: %d\n", mch->cycle);
 	}
 
