@@ -44,7 +44,7 @@ void execute_cpu(machine* mch)
 		case 0x31: return and_indy(opcode[2], opcode[1], mch);
 
 		/* ASL - arithmetic shift left for memory or accumulator */
-		case 0x0A: return asl_imm(opcode[1], mch);
+		case 0x0A: return asl_acc(mch);
 		case 0x06: return asl_zp(opcode[1], mch);
 		case 0x16: return asl_zpx(opcode[1], mch);
 		case 0x0E: return asl_abs(opcode[2], opcode[1], mch);
@@ -303,26 +303,11 @@ void execute_cpu(machine* mch)
 
 
 		/* LSR - shift mem or accumulator right one bit */
-		case 0x4A: // accumulator
-			mch->cycle += 2;
-			exit(1);
-			break;
-		case 0x46: // zero page
-			mch->cycle += 5;
-			exit(1);
-			break;
-		case 0x56: // zero page, X
-			mch->cycle += 6;
-			exit(1);
-			break;
-		case 0x4E: // absolute
-			mch->cycle += 6;
-			exit(1);
-			break;
-		case 0x5E: // absolute, X
-			mch->cycle += 7;
-			exit(1);
-			break;
+		case 0x4A: return lsr_acc(mch);
+		case 0x46: return lsr_zp(opcode[1], mch);
+		case 0x56: return lsr_zpx(opcode[1], mch);
+		case 0x4E: return lsr_abs(opcode[2], opcode[1], mch);
+		case 0x5E: return lsr_absx(opcode[2], opcode[1], mch);
 
 		/* ORA - or memory with accumulator */
 		case 0x09: return or_imm(opcode[1], mch);
@@ -347,7 +332,7 @@ int main(int argc, char* argv[])
 	char running = 1; // avoid compiler treating a constant 1 as a variable, temporarily 0
 
 	FILE* fp;
-	fp = fopen(argv[1], "rb");
+	fp = fopen(argv[1], "r");
 
 	if (fp == NULL) {
 		fprintf(stderr, "Could not open file '%s'. Exiting.\n", argv[1]);

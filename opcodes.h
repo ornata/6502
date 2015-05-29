@@ -33,8 +33,8 @@ void and_absy(uint8_t high, uint8_t low, machine* mch);
 void and_indx(uint8_t top, uint8_t bot, machine* mch);
 void and_indy(uint8_t top, uint8_t bot, machine* mch);
 
-void asl(uint8_t value, uint8_t* dest, uint8_t* P);
-void asl_imm(uint8_t value, machine* mch);
+void asl(uint8_t* dest, uint8_t* P);
+void asl_acc(machine* mch);
 void asl_zp(uint8_t address, machine* mch);
 void asl_zpx(uint8_t address, machine* mch);
 void asl_abs(uint8_t top, uint8_t bot, machine* mch);
@@ -70,6 +70,12 @@ void or_absx(uint8_t high, uint8_t low, machine* mch);
 void or_absy(uint8_t high, uint8_t low, machine* mch);
 void or_indx(uint8_t top, uint8_t bot, machine* mch);
 void or_indy(uint8_t top, uint8_t bot, machine* mch);
+
+void lsr_acc(machine* mch);
+void lsr_zp(uint8_t address, machine* mch);
+void lsr_zpx(uint8_t address, machine* mch);
+void lsr_abs(uint8_t top, uint8_t bot, machine* mch);
+void lsr_absx(uint8_t top, uint8_t bot, machine* mch);
 
 char page_check(uint16_t addr1, uint16_t addr2);
 

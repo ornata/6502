@@ -708,16 +708,16 @@ void or_indy(uint8_t top, uint8_t bot, machine* mch)
 
 
 /*
-* ASL - Arithmetic shift left dest by value bits.
+* ASL - Arithmetic shift left dest by one bit
 * Flags affected: N, Z, C
 */
-void asl(uint8_t value, uint8_t* dest, uint8_t* P)
+void asl(uint8_t* dest, uint8_t* P)
 {
 	// negative left shifts aren't defined in C
 	if (*dest >= 0) {
-		*dest <<= value;
+		*dest <<= 1;
 	} else {
-		*dest <<= value;
+		*dest <<= 1;
 		*dest |= 0b10000000;
 	}
 
@@ -728,7 +728,7 @@ void asl(uint8_t value, uint8_t* dest, uint8_t* P)
 		*P = CLEAR_ZERO(*P);
 
 	// set the carry flag
-	if ((0b00000001 << value) == 0)
+	if ((0b00000001 << 1) == 0)
 		*P = SET_CARRY(*P);
 	else
 		*P = CLEAR_CARRY(*P);
@@ -740,16 +740,15 @@ void asl(uint8_t value, uint8_t* dest, uint8_t* P)
 		*P = CLEAR_NEG(*P);
 }
 
-void asl_imm(uint8_t value, machine* mch)
+void asl_acc(machine* mch)
 {
-	asl(value, &(mch->A), &(mch->P));
-	mch->pc += 1;
+	asl(&(mch->A), &(mch->P));
 	mch->cycle += 2;
 }
 
 void asl_zp(uint8_t address, machine* mch)
 {	
-	asl(mch->memory[address], &(mch->A), &(mch->P));
+	asl(&(mch->memory[address]), &(mch->P));
 	mch->pc += 1;
 	mch->cycle += 5;
 }
@@ -758,7 +757,7 @@ void asl_zpx(uint8_t address, machine* mch)
 {	
 	uint16_t adr = address;
 	adc_16(mch->X, &adr, &(mch->P));
-	asl(mch->memory[adr], &(mch->A), &(mch->P));
+	asl(&(mch->memory[adr]), &(mch->P));
 	mch->pc += 1;
 	mch->cycle += 6;
 }
@@ -766,7 +765,7 @@ void asl_zpx(uint8_t address, machine* mch)
 void asl_abs(uint8_t top, uint8_t bot, machine* mch)
 {	
 	uint16_t address = ((uint16_t) mch->memory[top] << 8) | mch->memory[bot];
-	asl(mch->memory[address], &(mch->A), &(mch->P));
+	asl(&(mch->memory[address]), &(mch->P));
 	mch->pc += 2;
 	mch->cycle += 6;
 }
@@ -775,9 +774,65 @@ void asl_absx(uint8_t high, uint8_t low, machine* mch)
 {
 	uint16_t address = (high << 8) | low;
 	adc_16(mch->X, &address, &(mch->P));
-	asl(mch->memory[address], &(mch->A), &(mch->P));
+	asl(&(mch->memory[address]), &(mch->P));
 	mch->pc += 2;
 	mch->cycle += 7;
+}
+
+/*
+* LSR - Logical shift right
+* Flags affected: carry flag becomes what was in bit 0, bit 7 set to 0 
+*/
+void lsr(uint8_t* dest, uint8_t* P)
+{
+	if ((*dest & 0b00000001) == 0) {
+		*P = CLEAR_CARRY(*P);
+	} else {
+		*P = SET_CARRY(*P);
+	}
+
+	*dest >>= 1;
+	*dest &= 0b01111111;
+
+}
+
+void lsr_acc(machine* mch)
+{
+	lsr(&(mch->A), &(mch->P));
+	mch->cycle += 2;
+}
+
+void lsr_zp(uint8_t address, machine* mch)
+{
+	lsr(&(mch->memory[address]), &(mch->P));
+	mch->cycle += 5;
+	mch->pc += 1;
+}
+
+void lsr_zpx(uint8_t address, machine* mch)
+{
+	uint16_t adr = (uint16_t) address;
+	adc_16(mch->X, &adr, &(mch->P));
+	lsr(&(mch->memory[address]), &(mch->P));
+	mch->cycle += 6;
+	mch->pc += 1;
+}
+
+void lsr_abs(uint8_t top, uint8_t bot, machine* mch)
+{
+	uint16_t adr = ((uint16_t) top << 8) | bot;
+	lsr(&(mch->memory[adr]), &(mch->P));
+	mch->cycle += 6;
+	mch->pc += 2;
+}
+
+void lsr_absx(uint8_t top, uint8_t bot, machine* mch)
+{
+	uint16_t adr = ((uint16_t) top << 8) | bot;
+	adc_16(mch->X, &adr, &(mch->P));
+	lsr(&(mch->memory[adr]), &(mch->P));
+	mch->cycle += 7;
+	mch->pc += 2;
 }
 
 /* JMP - set PC to given address */
