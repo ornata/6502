@@ -51,6 +51,16 @@ void cmp_zpx(uint8_t address, machine* mch);
 void cmp_abs(uint8_t high, uint8_t low, machine* mch);
 void cmp_absx(uint8_t high, uint8_t low, machine* mch);
 
+void or(uint8_t value, uint8_t* A, uint8_t* P);
+void or_imm(uint8_t value, machine* mch);
+void or_zp(uint8_t address, machine* mch);
+void or_zpx(uint8_t address, machine* mch);
+void or_abs(uint8_t high, uint8_t low, machine* mch);
+void or_absx(uint8_t high, uint8_t low, machine* mch);
+void or_absy(uint8_t high, uint8_t low, machine* mch);
+void or_indx(uint8_t top, uint8_t bot, machine* mch);
+void or_indy(uint8_t top, uint8_t bot, machine* mch);
+
 char page_check(uint16_t addr1, uint16_t addr2);
 
 void jmp(uint8_t high, uint8_t low, machine* mch);

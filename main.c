@@ -343,37 +343,14 @@ void execute_cpu(machine* mch)
 			break;
 
 		/* ORA - or memory with accumulator */
-		case 0x09: // immediate
-			mch->cycle += 2;
-			exit(1);
-			break;
-		case 0x05: // zero page
-			mch->cycle += 3;
-			exit(1);
-			break;
-		case 0x15: // zero page, X
-			mch->cycle += 4;
-			exit(1);
-			break;
-		case 0x0D: // absolute
-			mch->cycle += 4;
-			exit(1);
-			break;
-		case 0x1D: // absolute, X
-			mch->cycle += 4; // +1 on pg crossing
-			exit(1);
-			break;
-		case 0x19: // absolute, Y
-			mch->cycle += 4; // +1 on pg crossing
-			exit(1);
-		case 0x01: // (indirect, X)
-			mch->cycle += 6;
-			exit(1);
-			break;
-		case 0x11: // (indirect), Y
-			mch->cycle += 5;
-			exit(1);
-			break;
+		case 0x09: return or_imm(opcode[1], mch);
+		case 0x05: return or_zp(opcode[1], mch);
+		case 0x15: return or_zpx(opcode[1], mch);
+		case 0x0D: return or_abs(opcode[2], opcode[1], mch);
+		case 0x1D: return or_absx(opcode[2], opcode[1], mch);
+		case 0x19: return or_absy(opcode[2], opcode[1], mch);
+		case 0x01: return or_indx(opcode[2], opcode[1], mch);
+		case 0x11: return or_indy(opcode[2], opcode[1], mch);
 
 		default:
 			fprintf(stdout, "unimplemented opcode!\n");

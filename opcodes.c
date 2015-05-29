@@ -507,7 +507,8 @@ void and_imm(uint8_t value, machine* mch)
 void and_zp(uint8_t address, machine* mch)
 {
 	and(mch->memory[address%256], &(mch->A), &(mch->P));
-	mch->cycle += 2;
+	mch->cycle += 3;
+	mch->pc += 1;
 }
 
 /* zero page offset by x */
@@ -516,7 +517,8 @@ void and_zpx(uint8_t address, machine* mch)
 	adc(mch->X, &address, &(mch->P));
 	address %= 256;
 	and(mch->memory[address], &(mch->A), &(mch->P));
-	mch->cycle += 2;
+	mch->cycle += 4;
+	mch->pc += 1;
 }
 
 /* absolute */
@@ -525,7 +527,7 @@ void and_abs(uint8_t high, uint8_t low, machine* mch)
 	uint16_t address = (high << 8) | low;
 	and(mch->memory[address], &(mch->A), &(mch->P));
 	mch->pc += 2;
-	mch->cycle += 3;
+	mch->cycle += 4;
 }
 
 /* absolute offset by x */
@@ -534,8 +536,13 @@ void and_absx(uint8_t high, uint8_t low, machine* mch)
 	uint16_t address = (high << 8) | low;
 	adc_16(mch->X, &address, &(mch->P));
 	and(mch->memory[address], &(mch->A), &(mch->P));
+
+	if (page_check(address, mch->pc) != 1) {
+		mch->cycle += 1;
+	}
+
 	mch->pc += 2;
-	mch->cycle += 3;
+	mch->cycle += 4;
 }
 
 /* absolute offest by y */
@@ -544,8 +551,13 @@ void and_absy(uint8_t high, uint8_t low, machine* mch)
 	uint16_t address = (high << 8) | low;
 	adc_16(mch->Y, &address, &(mch->P));
 	and(mch->memory[address], &(mch->A), &(mch->P));
+
+	if (page_check(address, mch->pc) != 1) {
+		mch->cycle += 1;
+	}
+
 	mch->pc += 2;
-	mch->cycle += 3;
+	mch->cycle += 4;
 }
 
 /* indirect offset by x */
@@ -558,7 +570,7 @@ void and_indx(uint8_t top, uint8_t bot, machine* mch)
 	uint16_t address = (((uint16_t)top << 8) | bot);
 	and(mch->memory[address], &(mch->A), &(mch->P));
 	mch->pc += 2;
-	mch->cycle += 2;
+	mch->cycle += 6;
 }
 
 /* indirect offset by y*/
@@ -569,9 +581,131 @@ void and_indy(uint8_t top, uint8_t bot, machine* mch)
 	uint16_t address = (((uint16_t)top << 8) | bot);
 	adc_16(mch->Y, &address, &(mch->P));
 	and(mch->memory[address], &(mch->A), &(mch->P));
+
+	if (page_check(address, mch->pc) != 1) {
+		mch->cycle += 1;
+	}
+
 	mch->pc += 2;
+	mch->cycle += 5;
+}
+
+/*
+* ORA - Bitwise OR with accumulator
+* Flags affected: S, Z
+*/
+void or(uint8_t value, uint8_t* A, uint8_t* P)
+{
+	uint8_t ored = *A | value;
+
+	// check if result is 0
+	if (ored == 0b00000000)
+		*P = SET_ZERO(*P);
+	else
+		*P = CLEAR_ZERO(*P);
+
+	// check if result is negative or positive
+	if (ored & 0b10000000)
+		*P = SET_NEG(*P);
+	else
+		*P = CLEAR_NEG(*P);
+}
+
+/* immediate addressing */
+void or_imm(uint8_t value, machine* mch)
+{
+	or(value, &(mch->A), &(mch->P));
+	mch->pc += 1;
 	mch->cycle += 2;
 }
+
+/* zero page */
+void or_zp(uint8_t address, machine* mch)
+{
+	or(mch->memory[address%256], &(mch->A), &(mch->P));
+	mch->cycle += 3;
+	mch->pc += 1;
+}
+
+/* zero page offset by x */
+void or_zpx(uint8_t address, machine* mch)
+{
+	adc(mch->X, &address, &(mch->P));
+	address %= 256;
+	or(mch->memory[address], &(mch->A), &(mch->P));
+	mch->cycle += 4;
+	mch->pc += 1;
+}
+
+/* absolute */
+void or_abs(uint8_t high, uint8_t low, machine* mch)
+{
+	uint16_t address = (high << 8) | low;
+	or(mch->memory[address], &(mch->A), &(mch->P));
+	mch->pc += 2;
+	mch->cycle += 4;
+}
+
+/* absolute offset by x */
+void or_absx(uint8_t high, uint8_t low, machine* mch)
+{
+	uint16_t address = (high << 8) | low;
+	adc_16(mch->X, &address, &(mch->P));
+	or(mch->memory[address], &(mch->A), &(mch->P));
+
+	if (page_check(address, mch->pc) != 1) {
+		mch->cycle += 1;
+	}
+
+	mch->pc += 2;
+	mch->cycle += 4;
+}
+
+/* absolute offest by y */
+void or_absy(uint8_t high, uint8_t low, machine* mch)
+{
+	uint16_t address = (high << 8) | low;
+	adc_16(mch->Y, &address, &(mch->P));
+	or(mch->memory[address], &(mch->A), &(mch->P));
+
+	if (page_check(address, mch->pc) != 1) {
+		mch->cycle += 1;
+	}
+
+	mch->pc += 2;
+	mch->cycle += 4;
+}
+
+/* indirect offset by x */
+void or_indx(uint8_t top, uint8_t bot, machine* mch)
+{
+	adc(mch->X, &top, &(mch->P));
+	adc(mch->X, &bot, &(mch->P));
+	top = mch->memory[top];
+	bot = mch->memory[bot];
+	uint16_t address = (((uint16_t)top << 8) | bot);
+	or(mch->memory[address], &(mch->A), &(mch->P));
+	mch->pc += 2;
+	mch->cycle += 6;
+}
+
+/* indirect offset by y*/
+void or_indy(uint8_t top, uint8_t bot, machine* mch)
+{
+	top = mch->memory[top];
+	bot = mch->memory[bot];
+	uint16_t address = (((uint16_t)top << 8) | bot);
+	adc_16(mch->Y, &address, &(mch->P));
+	or(mch->memory[address], &(mch->A), &(mch->P));
+
+	if (page_check(address, mch->pc) != 1) {
+		mch->cycle += 1;
+	}
+
+	mch->pc += 2;
+	mch->cycle += 5;
+}
+
 
 /*
 * ASL - Arithmetic shift left dest by value bits.
