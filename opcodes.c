@@ -13,6 +13,80 @@
 #define SET_INTERRUPT(x) x | 0b00100100
 #define CLEAR_INTERRUPT(x) x & 0b11111011
 
+/*
+* ADD with carry - Add value to dest and update flags.
+* Flags affected: S, V, Z, C
+* Cycles: 
+*/
+void adc(uint8_t value, uint8_t* dest, uint8_t* P)
+{
+	uint8_t sum = *dest + value;
+	uint8_t carry = sum ^ (*dest) ^ value;
+
+	// check for carry
+	if (carry & 0b10000000)
+		*P = SET_CARRY(*P); // set bit 0 = carry to 1
+	else
+		*P = CLEAR_CARRY(*P);
+
+	// check for zero
+	if (sum == 0b00000000)
+		*P = SET_ZERO(*P);
+	else
+		*P = CLEAR_ZERO(*P);
+
+	// check for overflow
+	if ((sum + carry) & 0b10000000)
+		*P = SET_OVERFLOW(*P);
+	else
+		*P = CLEAR_OVERFLOW(*P);
+
+	// check for negative
+	if (sum & 0b10000000)
+		SET_NEG(*P);
+	else
+		CLEAR_NEG(*P);
+
+	*dest = sum;
+}
+
+/*
+* ADD with carry for 16 bit values. Helper function that lets us set P accordingly
+* for indirect addressing.
+*/
+void adc_16(uint8_t value, uint16_t* dest, uint8_t* P)
+{
+	uint8_t sum = *dest + value;
+	uint8_t carry = sum ^ (*dest) ^ value;
+
+	// check for carry
+	if (carry & 0x800)
+		*P = SET_CARRY(*P); // set bit 0 = carry to 1
+	else
+		*P = CLEAR_CARRY(*P);
+
+	// check for zero
+	if (sum == 0x00)
+		*P = SET_ZERO(*P);
+	else
+		*P = CLEAR_ZERO(*P);
+
+	// check for overflow
+	if ((sum + carry) & 0x800)
+		*P = SET_OVERFLOW(*P);
+	else
+		*P = CLEAR_OVERFLOW(*P);
+
+	// check for negative
+	if (sum & 0b10000000)
+		SET_NEG(*P);
+	else
+		CLEAR_NEG(*P);
+
+	*dest = sum;
+}
+
+
 /* page_check - helper function that checks if addr1 and 2 are on the same page
 *	returns 1 if they are on the same page
 *	returns 0 if they are on different pages
@@ -28,12 +102,33 @@ char page_check(uint16_t addr1, uint16_t addr2)
 	} else {
 		return 1;
 	}
+}
 
+/* Return an indirect address offset by X */
+uint16_t indx_address(uint8_t top, uint8_t bot, machine* mch)
+{
+	adc(mch->X, &top, &(mch->P));
+	adc(mch->X, &bot, &(mch->P));
+	top = mch->memory[top];
+	bot = mch->memory[bot];
+	uint16_t address = (((uint16_t)top << 8) | bot);
+	return address;
+}
+
+/* Return an indirect address offset by Y */
+uint16_t indy_address(uint8_t top, uint8_t bot, machine* mch)
+{
+	top = mch->memory[top];
+	bot = mch->memory[bot];
+	uint16_t address = ((top << 8) | bot);
+	adc_16(mch->Y, &address, &(mch->P));
+	return address;
 }
 
 /* Branch - branch depending on if the value specified in bit is set. */
 void branch_set(uint8_t high, uint8_t low, machine* mch, int8_t bit)
 {
+	printf("branch\n");
 	// is the flag specified in "bit" set?
 	if ((mch->P & bit) != 0) {
 		// evaluate address
@@ -51,6 +146,7 @@ void branch_set(uint8_t high, uint8_t low, machine* mch, int8_t bit)
 /* Branch - branch depending on if the value specified in bit is clear. */
 void branch_clear(uint8_t high, uint8_t low, machine* mch, int8_t bit)
 {
+	printf("branch\n");
 	// is the flag specified in "bit" clear?
 	if ((mch->P & bit) == 0) {
 		// evaluate address
@@ -69,6 +165,7 @@ void branch_clear(uint8_t high, uint8_t low, machine* mch, int8_t bit)
 /* NOP - do nothing */
 void nop(machine* mch)
 {
+	printf("nop\n");
 	mch->cycle += 1;
 }
 
@@ -82,6 +179,7 @@ void nop(machine* mch)
 /* immediate addressing */
 void cmp_imm(uint8_t value, machine* mch)
 {
+
 	uint8_t cmp = mch->A - value;
 
 	if (cmp == 0) {
@@ -96,6 +194,86 @@ void cmp_imm(uint8_t value, machine* mch)
 
 	mch->pc += 1;
 	mch->cycle += 2;
+}
+
+void cmp_zp(uint8_t address, machine* mch)
+{
+	uint8_t cmp = mch->A - mch->memory[address];
+	if (cmp == 0) {
+		mch->P = SET_ZERO(mch->P);
+	} else if (cmp > 0) {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = CLEAR_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = SET_NEG(mch->P);
+	}
+
+	mch->pc += 1;
+	mch->cycle += 3;
+}
+
+void cmp_zpx(uint8_t address, machine* mch)
+{
+	uint16_t adr = (uint16_t) address;
+	adc_16(mch->X, &adr, &(mch->P));
+	uint8_t cmp = mch->A - mch->memory[adr];
+
+	if (cmp == 0) {
+		mch->P = SET_ZERO(mch->P);
+	} else if (cmp > 0) {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = CLEAR_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = SET_NEG(mch->P);
+	}
+
+	mch->pc += 1;
+	mch->cycle += 4;
+}
+
+void cmp_abs(uint8_t high, uint8_t low, machine* mch)
+{
+	uint16_t adr = ((uint16_t) high << 8) | low;
+	uint8_t cmp = mch->A - mch->memory[adr];
+
+	if (cmp == 0) {
+		mch->P = SET_ZERO(mch->P);
+	} else if (cmp > 0) {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = CLEAR_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = SET_NEG(mch->P);
+	}
+
+	mch->pc += 2;
+	mch->cycle += 4;
+}
+
+void cmp_absx(uint8_t high, uint8_t low, machine* mch)
+{
+	uint16_t adr = ((uint16_t) high << 8) | low;
+	adc_16(mch->X, &adr, &(mch->P));
+	uint8_t cmp = mch->A - mch->memory[adr];
+
+	if (cmp == 0) {
+		mch->P = SET_ZERO(mch->P);
+	} else if (cmp > 0) {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = CLEAR_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = SET_NEG(mch->P);
+	}
+
+	if (page_check(adr, mch->P) != 1){
+		mch->cycle += 1;
+	}
+
+	mch->pc += 2;
+	mch->cycle += 4;
 }
 
 /*
@@ -216,43 +394,6 @@ void cli(machine* mch)
 }
 
 /*
-* ADD with carry - Add value to dest and update flags.
-* Flags affected: S, V, Z, C
-* Cycles: 
-*/
-void adc(uint8_t value, uint8_t* dest, uint8_t* P)
-{
-	uint8_t sum = *dest + value;
-	uint8_t carry = sum ^ (*dest) ^ value;
-
-	// check for carry
-	if (carry & 0b10000000)
-		*P = SET_CARRY(*P); // set bit 0 = carry to 1
-	else
-		*P = CLEAR_CARRY(*P);
-
-	// check for zero
-	if (sum == 0b00000000)
-		*P = SET_ZERO(*P);
-	else
-		*P = CLEAR_ZERO(*P);
-
-	// check for overflow
-	if ((sum + carry) & 0b10000000)
-		*P = SET_OVERFLOW(*P);
-	else
-		*P = CLEAR_OVERFLOW(*P);
-
-	// check for negative
-	if (sum & 0b10000000)
-		SET_NEG(*P);
-	else
-		CLEAR_NEG(*P);
-
-	*dest = sum;
-}
-
-/*
 * AND - Bitwise AND with accumulator
 * Flags affected: S, Z
 */
@@ -271,42 +412,6 @@ void and(uint8_t value, uint8_t* A, uint8_t* P)
 		*P = SET_NEG(*P);
 	else
 		*P = CLEAR_NEG(*P);
-}
-
-/*
-* ADD with carry for 16 bit values. Helper function that lets us set P accordingly
-* for indirect addressing.
-*/
-void adc_16(uint8_t value, uint16_t* dest, uint8_t* P)
-{
-	uint8_t sum = *dest + value;
-	uint8_t carry = sum ^ (*dest) ^ value;
-
-	// check for carry
-	if (carry & 0x800)
-		*P = SET_CARRY(*P); // set bit 0 = carry to 1
-	else
-		*P = CLEAR_CARRY(*P);
-
-	// check for zero
-	if (sum == 0x00)
-		*P = SET_ZERO(*P);
-	else
-		*P = CLEAR_ZERO(*P);
-
-	// check for overflow
-	if ((sum + carry) & 0x800)
-		*P = SET_OVERFLOW(*P);
-	else
-		*P = CLEAR_OVERFLOW(*P);
-
-	// check for negative
-	if (sum & 0b10000000)
-		SET_NEG(*P);
-	else
-		CLEAR_NEG(*P);
-
-	*dest = sum;
 }
 
 /* immediate addressing */
@@ -499,6 +604,46 @@ void asl(uint8_t value, uint8_t* dest, uint8_t* P)
 		*P = SET_NEG(*P);
 	else
 		*P = CLEAR_NEG(*P);
+}
+
+void asl_imm(uint8_t value, machine* mch)
+{
+	asl(value, &(mch->A), &(mch->P));
+	mch->pc += 1;
+	mch->cycle += 2;
+}
+
+void asl_zp(uint8_t address, machine* mch)
+{	
+	asl(mch->memory[address], &(mch->A), &(mch->P));
+	mch->pc += 1;
+	mch->cycle += 5;
+}
+
+void asl_zpx(uint8_t address, machine* mch)
+{	
+	uint16_t adr = address;
+	adc_16(mch->X, &adr, &(mch->P));
+	asl(mch->memory[adr], &(mch->A), &(mch->P));
+	mch->pc += 1;
+	mch->cycle += 6;
+}
+
+void asl_abs(uint8_t top, uint8_t bot, machine* mch)
+{	
+	uint16_t address = ((uint16_t) mch->memory[top] << 8) | mch->memory[bot];
+	asl(mch->memory[address], &(mch->A), &(mch->P));
+	mch->pc += 2;
+	mch->cycle += 6;
+}
+
+void asl_absx(uint8_t high, uint8_t low, machine* mch)
+{
+	uint16_t address = (high << 8) | low;
+	adc_16(mch->X, &address, &(mch->P));
+	asl(mch->memory[address], &(mch->A), &(mch->P));
+	mch->pc += 2;
+	mch->cycle += 7;
 }
 
 /* JMP - set PC to given address */

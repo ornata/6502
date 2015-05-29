@@ -34,6 +34,11 @@ void and_indx(uint8_t top, uint8_t bot, machine* mch);
 void and_indy(uint8_t top, uint8_t bot, machine* mch);
 
 void asl(uint8_t value, uint8_t* dest, uint8_t* P);
+void asl_imm(uint8_t value, machine* mch);
+void asl_zp(uint8_t address, machine* mch);
+void asl_zpx(uint8_t address, machine* mch);
+void asl_abs(uint8_t top, uint8_t bot, machine* mch);
+void asl_absx(uint8_t high, uint8_t low, machine* mch);
 
 void branch_set(uint8_t high, uint8_t low, machine* mch, int8_t bit);
 void branch_clear(uint8_t high, uint8_t low, machine* mch, int8_t bit);
@@ -41,6 +46,10 @@ void branch_clear(uint8_t high, uint8_t low, machine* mch, int8_t bit);
 void cmp_imm(uint8_t value, machine* mch);
 void cpx_imm(uint8_t value, machine* mch);
 void cpy_imm(uint8_t value, machine* mch);
+void cmp_zp(uint8_t address, machine* mch);
+void cmp_zpx(uint8_t address, machine* mch);
+void cmp_abs(uint8_t high, uint8_t low, machine* mch);
+void cmp_absx(uint8_t high, uint8_t low, machine* mch);
 
 char page_check(uint16_t addr1, uint16_t addr2);
 
