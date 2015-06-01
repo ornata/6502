@@ -163,10 +163,10 @@ void branch_clear(uint8_t high, uint8_t low, machine* mch, int8_t bit)
 
 
 /* NOP - do nothing */
-void nop(machine* mch)
+void nop(machine* mch, uint8_t cycles)
 {
 	printf("nop\n");
-	mch->cycle += 1;
+	mch->cycle += cycles;
 }
 
 /*
@@ -180,7 +180,7 @@ void nop(machine* mch)
 void cmp_imm(uint8_t value, machine* mch)
 {
 
-	uint8_t cmp = mch->A - value;
+	uint8_t cmp = (mch->A)/2 - (value)/2;
 
 	if (cmp == 0) {
 		mch->P = SET_ZERO(mch->P);
@@ -198,7 +198,7 @@ void cmp_imm(uint8_t value, machine* mch)
 
 void cmp_zp(uint8_t address, machine* mch)
 {
-	uint8_t cmp = mch->A - mch->memory[address];
+	uint8_t cmp = (mch->A)/2 - (mch->memory[address])/2;
 	if (cmp == 0) {
 		mch->P = SET_ZERO(mch->P);
 	} else if (cmp > 0) {
@@ -217,7 +217,7 @@ void cmp_zpx(uint8_t address, machine* mch)
 {
 	uint16_t adr = (uint16_t) address;
 	adc_16(mch->X, &adr, &(mch->P));
-	uint8_t cmp = mch->A - mch->memory[adr];
+	uint8_t cmp = (mch->A)/2 - (mch->memory[adr])/2;
 
 	if (cmp == 0) {
 		mch->P = SET_ZERO(mch->P);
@@ -236,7 +236,7 @@ void cmp_zpx(uint8_t address, machine* mch)
 void cmp_abs(uint8_t high, uint8_t low, machine* mch)
 {
 	uint16_t adr = ((uint16_t) high << 8) | low;
-	uint8_t cmp = mch->A - mch->memory[adr];
+	uint8_t cmp = (mch->A)/2 - (mch->memory[adr])/2;
 
 	if (cmp == 0) {
 		mch->P = SET_ZERO(mch->P);
@@ -256,7 +256,7 @@ void cmp_absx(uint8_t high, uint8_t low, machine* mch)
 {
 	uint16_t adr = ((uint16_t) high << 8) | low;
 	adc_16(mch->X, &adr, &(mch->P));
-	uint8_t cmp = mch->A - mch->memory[adr];
+	uint8_t cmp = (mch->A)/2 - (mch->memory[adr])/2;
 
 	if (cmp == 0) {
 		mch->P = SET_ZERO(mch->P);
@@ -286,7 +286,7 @@ void cmp_absx(uint8_t high, uint8_t low, machine* mch)
 /* immediate addressing */
 void cpx_imm(uint8_t value, machine* mch)
 {
-	uint8_t cmp = mch->X - value;
+	uint8_t cmp = (mch->X)/2 - (value)/2;
 
 	if (cmp == 0) {
 		mch->P = SET_ZERO(mch->P);
@@ -312,7 +312,7 @@ void cpx_imm(uint8_t value, machine* mch)
 /* immediate addressing */
 void cpy_imm(uint8_t value, machine* mch)
 {
-	uint8_t cmp = mch->Y - value;
+	uint8_t cmp = (mch->Y)/2 - (value)/2;
 
 	if (cmp == 0) {
 		mch->P = SET_ZERO(mch->P);
