@@ -4,6 +4,8 @@
 #include "machine.h"
 #include "opcodes.h"
 #include "io.h"
+#include "graphics.h"
+#include "sound.h"
 
 #define INIT_PC 0 // placeholder
 #define INTERRUPT_PERIOD 100 // placeholder
@@ -379,6 +381,8 @@ int main(int argc, char* argv[])
 	while(running){
 		execute_cpu(mch);
 		printf("cpu cycle: %d\n", mch->cycle);
+		emulate_graphics(mch->memory);
+		emulate_sound(mch->memory);
 	}
 
 	free(mch->memory);
