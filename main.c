@@ -88,10 +88,7 @@ void execute_cpu(machine* mch)
 		case 0x10: return branch_clear(opcode[2], opcode[1], mch, 0b10000000);
 
 		/* BRK - force break. cannot be masked by setting I!!*/
-		case 0x00:
-			mch->cycle += 7;
-			exit(1);
-			break;
+		case 0x00: return brk(mch);
 
 		/* BVC - branch on overflow clear */
 		case 0x50: return branch_clear(opcode[2], opcode[1], mch, 0b01000000);
@@ -243,31 +240,13 @@ void execute_cpu(machine* mch)
 			break;
 
 		/* LDA - load memory into accumulator */
-		case 0xA9: // immediate
-			mch->cycle += 2;
-			exit(1);
-			break;
-		case 0xA5: // zero page
-			mch->cycle += 3;
-			exit(1);
-			break;
-		case 0xB5: // zero page, offset by X
-			mch->cycle += 4;
-			exit(1);
-			break;
-		case 0xAD: // absolute
-			mch->cycle += 4;
-			exit(1);
-			break;
-		case 0xBD: // absolute, offset by X
-			mch->cycle += 4; // +1 if pg boundary crossed
-			exit(1);
-			break;
-		case 0xB9:
-			mch->cycle += 4; // +1 if pg boundary crossed
-			exit(1);
-			break;
-		case 0xA1: // (indirect, X)
+		case 0xA9: return lda_imm(opcode[1], mch);
+		case 0xA5: return lda_zp(opcode[1], mch, 0, 0);
+		case 0xB5: return lda_zp(opcode[1], mch, 1, mch->X);
+		case 0xAD: return lda_abs(opcode[2], opcode[1], mch, 0, 0);
+		case 0xBD: return lda_abs(opcode[2], opcode[1], mch, 1, mch->X);
+		case 0xB9: return lda_abs(opcode[2], opcode[1], mch, 1, mch->Y);
+		case 0xA1: // (zp, X)
 			mch->cycle += 6;
 			exit(1);
 			break;
@@ -380,6 +359,7 @@ int main(int argc, char* argv[])
 	// main loop. run while cpu is running
 	while(running){
 		execute_cpu(mch);
+		mch->pc += 1;
 		printf("cpu cycle: %d\n", mch->cycle);
 		emulate_graphics(mch->memory);
 		emulate_sound(mch->memory);

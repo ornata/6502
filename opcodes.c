@@ -104,6 +104,16 @@ char page_check(uint16_t addr1, uint16_t addr2)
 	}
 }
 
+void brk(machine* mch)
+{
+	// store pc(hi)
+	// store pc(low)
+	// store P
+	// fetch PC(low) from 0xFFFE
+	// fetch PC(hi) from 0xFFFF
+	mch->cycle += 7;
+}
+
 /* Return an indirect address offset by X */
 uint16_t indx_address(uint8_t top, uint8_t bot, machine* mch)
 {
@@ -919,6 +929,80 @@ void dec_absx(uint8_t top, uint8_t bot, machine* mch)
 	dec(&(mch->memory[adr]), &(mch->P));
 	mch->cycle += 7;
 	mch->pc += 2;
+}
+
+void lda_imm(uint8_t adr, machine* mch)
+{
+	if (adr == 0) {
+		mch->P = SET_ZERO(mch->P); 
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+	}
+
+	if (adr < 0) {
+		mch->P = SET_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_NEG(mch->P);
+	}
+
+	mch->A = mch->memory[adr];
+	mch->cycle += 2;
+	mch->pc += 1;
+}
+
+
+void lda_abs(uint8_t top, uint8_t bot, machine* mch, char has_offset, uint8_t offset)
+{
+	uint16_t adr = ((uint16_t) top << 8) | bot;
+
+	if (has_offset) {
+		adr += offset;
+		if (page_check(adr, mch->pc) != 1) {
+			mch->cycle += 1;
+		}
+	}
+
+	if (adr == 0) {
+		mch->P = SET_ZERO(mch->P); 
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+	}
+
+	if (adr < 0) {
+		mch->P = SET_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_NEG(mch->P);
+	}
+
+	mch->A = mch->memory[adr];
+	mch->cycle += 4;
+	mch->pc += 2;
+}
+
+void lda_zp(uint8_t adr, machine* mch, char has_offset, uint8_t offset)
+{
+	uint16_t address = (uint16_t) adr;
+
+	if (has_offset) {
+		adr += offset;
+		mch->cycle += 1;
+
+		if (adr == 0) {
+			mch->P = SET_ZERO(mch->P);
+		} else {
+			mch->P = CLEAR_ZERO(mch->P);
+		}
+
+		if (adr < 0) {
+			mch->P = SET_NEG(mch->P);
+		} else {
+			mch->P = CLEAR_NEG(mch->P);
+		}
+	}
+
+	mch->A = mch->memory[adr];
+	mch->cycle += 3;
+	mch->pc += 1;
 }
 
 

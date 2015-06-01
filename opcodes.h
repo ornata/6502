@@ -5,7 +5,7 @@
 #include "io.h"
 #include "machine.h"
 
-void nop(machine* mch);
+void nop(machine* mch, uint8_t cycles);
 void clv(machine* m);
 void cli(machine* m);
 void clc(machine* mch);
@@ -70,6 +70,10 @@ void or_absx(uint8_t high, uint8_t low, machine* mch);
 void or_absy(uint8_t high, uint8_t low, machine* mch);
 void or_indx(uint8_t top, uint8_t bot, machine* mch);
 void or_indy(uint8_t top, uint8_t bot, machine* mch);
+
+void lda_imm(uint8_t adr, machine* mch);
+void lda_abs(uint8_t top, uint8_t bot, machine* mch, char has_offset, uint8_t offset);
+void lda_zp(uint8_t adr, machine* mch, char has_offset, uint8_t offset);
 
 void lsr_acc(machine* mch);
 void lsr_zp(uint8_t address, machine* mch);
