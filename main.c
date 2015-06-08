@@ -227,11 +227,8 @@ void execute_cpu(machine* mch)
 			break;
 
 		/* JMP - jump to new location */
-		case 0x4C: jmp(opcode[2], opcode[1], mch);
-		case 0x6C:
-			mch->cycle += 5;
-			exit(1);
-			break;
+		case 0x4C: jmp_abs(opcode[2], opcode[1], mch);
+		case 0x6C: jmp_ind(opcode[2], opcode[1], mch);
 
 		/* JSR - jump and save return address */
 		case 0x20:
@@ -344,18 +341,12 @@ int main(int argc, char* argv[])
 		exit(-2);
 	}
 
-	mch->memory = (uint8_t*)malloc(0xFFFF * sizeof(uint8_t)); // addressable space: 0x0000 to 0xFFFF
-	if (mch->memory == NULL) {
-		fprintf(stderr, "Could not allocate memory. Exiting. \n");
-		exit(-2);
-	}
-
 	mch->P = 0b00100000; // bit 5 is 1 at all times
 	mch->cycle = 0;
 
-	printf("%x\n", mch->memory[0]);
-	mch->memory = read_rom(mch->memory, fp);
+	read_ines(mch, fp);
 
+/*
 	// main loop. run while cpu is running
 	while(running){
 		execute_cpu(mch);
@@ -364,8 +355,12 @@ int main(int argc, char* argv[])
 		emulate_graphics(mch->memory);
 		emulate_sound(mch->memory);
 	}
+	*/
 
 	free(mch->memory);
+	free(mch->prg_rom);
+	free(mch->prg_ram);
+	free(mch->chr_rom);
 	free(mch);
 	fclose(fp);
 }
