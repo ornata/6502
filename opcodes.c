@@ -600,6 +600,101 @@ void and_indy(uint8_t top, uint8_t bot, machine* mch)
 	mch->cycle += 5;
 }
 
+/* EOR - Bitwise XOR with accumulator.
+* Flags: Z, S
+*/
+
+void eor(uint8_t value, machine* mch)
+{
+	uint8_t xored = value ^ mch->A;
+
+	if (xored == 0)
+		mch->P = SET_ZERO(mch->P);
+	else
+		mch->P = CLEAR_ZERO(mch->P);
+
+	if (xored < 0)
+		mch->P = SET_NEG(mch->P);
+	else
+		mch->P = CLEAR_NEG(mch->P);
+}
+
+void eor_imm(uint8_t value, machine* mch)
+{
+	eor(value, mch);
+	mch->cycle += 2;
+	mch->pc += 1;
+}
+
+void eor_zp(uint8_t value, machine* mch)
+{
+	eor(mch->memory[value], mch);
+	mch->cycle += 3;
+	mch->pc += 1;
+}
+
+void eor_zpx(uint8_t value, machine* mch)
+{
+	value += mch->X;
+	value %= 256;
+	eor(mch->memory[value], mch);
+	mch->cycle += 4;
+	mch->pc += 1;
+}
+
+void eor_abs(uint8_t top, uint8_t bot, machine* mch)
+{
+	eor(mch->memory[((uint16_t) top << 8) | bot], mch);
+	mch->cycle += 4;
+	mch->pc += 2;
+}
+
+void eor_absx(uint8_t top, uint8_t bot, machine* mch)
+{
+	uint16_t adr = ((uint16_t)top << 8) | bot;
+	adc_16(mch->X, &adr, &(mch->P));
+	eor(mch->memory[adr], mch);
+	if (page_check(adr, mch->pc) != 1)
+		mch->cycle += 1;
+	mch->cycle += 4;
+	mch->pc += 2;
+}
+
+void eor_absy(uint8_t top, uint8_t bot, machine* mch)
+{
+	uint16_t adr = ((uint16_t)top << 8) | bot;
+	adc_16(mch->Y, &adr, &(mch->P));
+	eor(mch->memory[adr], mch);
+	if (page_check(adr, mch->pc) != 1)
+		mch->cycle += 1;
+	mch->cycle += 4;
+	mch->pc += 2;
+}
+
+void eor_indx(uint8_t top, uint8_t bot, machine* mch)
+{
+	adc(mch->X, &top, &(mch->P));
+	adc(mch->X, &bot, &(mch->P));
+	top = mch->memory[top];
+	bot = mch->memory[bot];
+	uint16_t adr = ((uint16_t)top << 8) | bot;
+	eor(mch->memory[adr], mch);
+	mch->cycle += 6;
+	mch->pc += 2;
+}
+
+void eor_indy(uint8_t top, uint8_t bot, machine* mch)
+{
+	top = mch->memory[top];
+	bot = mch->memory[bot];
+	uint16_t adr = ((uint16_t) top << 8) | bot;
+	adc_16(mch->Y, &adr, &mch->P);
+	eor(mch->memory[adr], mch);
+	if (page_check(adr, mch->pc) != 1)
+		mch->cycle += 1;
+	mch->cycle += 5;
+}
+
 /*
 * ORA - Bitwise OR with accumulator
 * Flags affected: S, Z
@@ -853,6 +948,21 @@ void jmp(uint8_t high, uint8_t low, machine* mch)
 	mch->cycle += 3;
 }
 
+/* JMP - set PC to given address */
+void jmp_abs(uint8_t high, uint8_t low, machine* mch)
+{
+	uint16_t address = (high << 8) | low;
+	mch->pc = address-1;
+	mch->cycle += 3;
+}
+
+void jmp_ind(uint8_t high, uint8_t low, machine* mch)
+{
+	uint16_t address = (mch->memory[high] << 8) | mch->memory[low];
+	mch->pc = address-1;
+	mch->cycle += 5;
+}
+
 /* BIT - check if the bits in A are set in the value at some memory address
 * Only impacts zero flag. Does not store a result. 
 */
@@ -1003,6 +1113,195 @@ void lda_zp(uint8_t adr, machine* mch, char has_offset, uint8_t offset)
 	mch->A = mch->memory[adr];
 	mch->cycle += 3;
 	mch->pc += 1;
+}
+
+void ldx_imm(uint8_t adr, machine* mch)
+{
+	if (adr == 0) {
+		mch->P = SET_ZERO(mch->P); 
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+	}
+
+	if (adr < 0) {
+		mch->P = SET_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_NEG(mch->P);
+	}
+
+	mch->X = mch->memory[adr];
+	mch->cycle += 2;
+	mch->pc += 1;
+}
+
+void ldx_zp(uint8_t adr, machine* mch, char has_offset, uint8_t offset)
+{
+	uint16_t address = (uint16_t) adr;
+
+	if (has_offset) {
+		adr += offset;
+		mch->cycle += 1;
+
+		if (adr == 0) {
+			mch->P = SET_ZERO(mch->P);
+		} else {
+			mch->P = CLEAR_ZERO(mch->P);
+		}
+
+		if (adr < 0) {
+			mch->P = SET_NEG(mch->P);
+		} else {
+			mch->P = CLEAR_NEG(mch->P);
+		}
+	}
+
+	mch->X = mch->memory[adr];
+	mch->cycle += 3;
+	mch->pc += 1;
+}
+
+void ldx_abs(uint8_t top, uint8_t bot, machine* mch, char has_offset, uint8_t offset)
+{
+	uint16_t adr = ((uint16_t) top << 8) | bot;
+
+	if (has_offset) {
+		adr += offset;
+		if (page_check(adr, mch->pc) != 1) {
+			mch->cycle += 1;
+		}
+	}
+
+	if (adr == 0) {
+		mch->P = SET_ZERO(mch->P); 
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+	}
+
+	if (adr < 0) {
+		mch->P = SET_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_NEG(mch->P);
+	}
+
+	mch->X = mch->memory[adr];
+	mch->cycle += 4;
+	mch->pc += 2;
+}
+
+void sei(machine* mch)
+{
+	mch->P = SET_INTERRUPT(mch->P);
+	mch->cycle += 2;
+}
+
+void sec(machine* mch)
+{
+	mch->P = SET_CARRY(mch->P);
+	mch->cycle += 2;
+}
+
+void php(machine* mch)
+{	
+	mch->stack_head++;
+	mch->stack[mch->stack_head] = mch->P;
+	mch->cycle += 3;
+}
+
+void plp(machine* mch)
+{
+	mch->P = mch->stack[mch->stack_head];
+	mch->stack_head--;
+	mch->cycle += 4;
+}
+
+void pha(machine* mch)
+{
+	mch->stack_head++;
+	mch->stack[mch->stack_head] = mch->A;
+	mch->cycle += 3;
+}
+
+void pla(machine* mch)
+{
+	mch->A = mch->stack[mch->stack_head];
+	mch->stack_head--;
+	mch->cycle += 4;
+}
+
+void tax(machine* mch)
+{
+	mch->X = mch->A;
+
+	if (mch->X == 0) {
+		mch->P = SET_ZERO(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+	}
+
+	if (mch->X < 0) {
+		mch->P = SET_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_NEG(mch->P);
+	}
+
+	mch->cycle += 2;
+}
+
+void tay(machine* mch)
+{
+	mch->Y = mch->A;
+
+	if (mch->Y == 0) {
+		mch->P = SET_ZERO(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+	}
+
+	if (mch->Y < 0) {
+		mch->P = SET_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_NEG(mch->P);
+	}
+
+	mch->cycle += 2;	
+}
+
+void tya(machine* mch)
+{
+	mch->A = mch->Y;
+
+	if (mch->A == 0) {
+		mch->P = SET_ZERO(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+	}
+
+	if (mch->A < 0) {
+		mch->P = SET_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_NEG(mch->P);
+	}
+
+	mch->cycle += 2;	
+}
+
+void txa(machine* mch)
+{
+	mch->A = mch->X;
+
+	if (mch->A == 0) {
+		mch->P = SET_ZERO(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+	}
+
+	if (mch->A < 0) {
+		mch->P = SET_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_NEG(mch->P);
+	}
+
+	mch->cycle += 2;	
 }
 
 

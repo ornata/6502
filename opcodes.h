@@ -11,6 +11,12 @@ void cli(machine* m);
 void clc(machine* mch);
 void dex(machine* mch);
 void dey(machine* mch);
+void sei(machine* mch);
+void php(machine* mch);
+void plp(machine* mch);
+void pha(machine* mch);
+void pla(machine* mch);
+void sec(machine* mch);
 
 void adc(uint8_t value, uint8_t* dest, uint8_t* P);
 void adc_16(uint8_t value, uint16_t* dest, uint8_t* P);
@@ -22,6 +28,7 @@ void adc_absx(uint8_t high, uint8_t low, machine* mch);
 void adc_absy(uint8_t high, uint8_t low, machine* mch);
 void adc_indx(uint8_t top, uint8_t bot, machine* mch);
 void adc_indy(uint8_t top, uint8_t bot, machine* mch);
+
 
 void and(uint8_t value, uint8_t* A, uint8_t* P);
 void and_imm(uint8_t value, machine* mch);
@@ -63,6 +70,16 @@ void dec_zpx(uint8_t address, machine* mch);
 void dec_abs(uint8_t top, uint8_t bot, machine* mch);
 void dec_absx(uint8_t top, uint8_t bot, machine* mch);
 
+void eor(uint8_t value, machine* mch);
+void eor_imm(uint8_t value, machine* mch);
+void eor_zp(uint8_t value, machine* mch);
+void eor_zpx(uint8_t value, machine* mch);
+void eor_abs(uint8_t top, uint8_t bot, machine* mch);
+void eor_absx(uint8_t top, uint8_t bot, machine* mch);
+void eor_absy(uint8_t top, uint8_t bot, machine* mch);
+void eor_indx(uint8_t top, uint8_t bot, machine* mch);
+void eor_indy(uint8_t top, uint8_t bot, machine* mch);
+
 void or(uint8_t value, uint8_t* A, uint8_t* P);
 void or_imm(uint8_t value, machine* mch);
 void or_zp(uint8_t address, machine* mch);
@@ -77,6 +94,10 @@ void lda_imm(uint8_t adr, machine* mch);
 void lda_abs(uint8_t top, uint8_t bot, machine* mch, char has_offset, uint8_t offset);
 void lda_zp(uint8_t adr, machine* mch, char has_offset, uint8_t offset);
 
+void ldx_imm(uint8_t adr, machine* mch);
+void ldx_zp(uint8_t adr, machine* mch, char has_offset, uint8_t offset);
+void ldx_abs(uint8_t top, uint8_t bot, machine* mch, char has_offset, uint8_t offset);
+
 void lsr_acc(machine* mch);
 void lsr_zp(uint8_t address, machine* mch);
 void lsr_zpx(uint8_t address, machine* mch);
@@ -86,5 +107,12 @@ void lsr_absx(uint8_t top, uint8_t bot, machine* mch);
 char page_check(uint16_t addr1, uint16_t addr2);
 
 void jmp(uint8_t high, uint8_t low, machine* mch);
+void jmp_abs(uint8_t high, uint8_t low, machine* mch);
+void jmp_ind(uint8_t high, uint8_t low, machine* mch);
+
+void tax(machine* mch);
+void tay(machine* mch);
+void txa(machine* mch);
+void tya(machine* mch);
 
 #endif

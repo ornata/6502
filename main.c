@@ -163,38 +163,14 @@ void execute_cpu(machine* mch)
 		case 0x88: return dey(mch);
 
 		/* EOR - xor with accumulator */
-		case 0x49: // immediate
-			mch->cycle += 2;
-			exit(1);
-			break;
-		case 0x45: // zero page
-			mch->cycle += 3;
-			exit(1);
-			break;
-		case 0x55: // zero page, offset by X
-			mch->cycle += 4;
-			exit(1);
-			break;
-		case 0x40: // absolute
-			mch->cycle += 4;
-			exit(1);
-			break;
-		case 0x5D: // absolute, offset by X
-			mch->cycle += 4; // +1 if pg boundary crossed
-			exit(1);
-			break;
-		case 0x59: // absolute, offset by Y
-			mch->cycle += 4; // +1 if pg boundary crossed
-			exit(1);
-			break;
-		case 0x41: // (indirect, X)
-			mch->cycle += 6;
-			exit(1);
-			break;
-		case 0x51: // (indirect), Y
-			mch->cycle += 5; // +1 if pg boundary crossed
-			exit(1);
-			break;
+		case 0x49: return eor_imm(opcode[1], mch);
+		case 0x45: return eor_zp(opcode[1], mch);
+		case 0x55: return eor_zpx(opcode[1], mch);
+		case 0x40: return eor_abs(opcode[2], opcode[1], mch);
+		case 0x5D: return eor_absx(opcode[2], opcode[1], mch);
+		case 0x59: return eor_absy(opcode[2], opcode[1], mch);
+		case 0x41: return eor_indx(opcode[2], opcode[1], mch);
+		case 0x51: return eor_indy(opcode[2], opcode[1], mch);
 
 		/* INC - increment memory by 1 */
 		case 0xE6: // zero page
@@ -253,26 +229,11 @@ void execute_cpu(machine* mch)
 			break;
 
 		/* LDX - load into X */
-		case 0xA2: // immediate
-			mch->cycle += 2;
-			exit(1);
-			break;
-		case 0xA6: // zero page
-			mch->cycle += 3;
-			exit(1);
-			break;
-		case 0xB6: // zero page, Y
-			mch->cycle += 4;
-			exit(1);
-			break;
-		case 0xAE: // absolute
-			mch->cycle += 4;
-			exit(1);
-			break;
-		case 0xBE: // absolute, Y
-			mch->cycle += 4; // +1 if pg boundary crossed
-			exit(1);
-			break;
+		case 0xA2: return ldx_imm(opcode[1], mch);
+		case 0xA6: return ldx_zp(opcode[1], mch, 0, 0);
+		case 0xB6: return ldx_zp(opcode[1], mch, 1, mch->X);
+		case 0xAE: return ldx_abs(opcode[2], opcode[1], mch, 0, 0);
+		case 0xBE: return ldx_abs(opcode[2], opcode[1], mch, 1, mch->X);
 
 		/* LDY - load into Y */
 		case 0xA0: // immediate
@@ -314,6 +275,19 @@ void execute_cpu(machine* mch)
 		case 0x01: return or_indx(opcode[2], opcode[1], mch);
 		case 0x11: return or_indy(opcode[2], opcode[1], mch);
 
+		case 0x48: return pha(mch);
+		case 0x08: return php(mch);
+		case 0x68: return pla(mch);
+		case 0x28: return plp(mch);
+
+		case 0x78: return sei(mch); 
+		case 0x38: return sec(mch);
+
+		case 0xAA: return tax(mch);
+		case 0xA8: return tay(mch);
+		case 0x8A: return txa(mch);
+		case 0x98: return tya(mch);
+
 		default:
 			fprintf(stdout, "unimplemented opcode!\n");
 			fprintf(stdout, "opcode in question: %x\n", opcode[0]);
@@ -344,18 +318,32 @@ int main(int argc, char* argv[])
 	mch->P = 0b00100000; // bit 5 is 1 at all times
 	mch->cycle = 0;
 
-	read_ines(mch, fp);
+	mch->stack = (uint8_t*) malloc(256 * sizeof(uint8_t));
 
-/*
-	// main loop. run while cpu is running
+	if (mch->stack == NULL) {
+		fprintf(stderr, "Could not allocate memory. Exiting. \n");
+		exit(-2);
+	}
+
+	mch->stack_head = 0;
+
+	read_file(mch, fp);
+
 	while(running){
+		print_machine_state(mch);
 		execute_cpu(mch);
 		mch->pc += 1;
 		printf("cpu cycle: %d\n", mch->cycle);
-		emulate_graphics(mch->memory);
-		emulate_sound(mch->memory);
+		// check for interrupts
+		/*if ((mch->P & 0b00000100) != 0) {
+			printf("Caught an interrupt\n");
+			mch->stack_head++;
+			mch->stack[mch->stack_head] = mch->pc;
+			mch->pc = ((uint16_t)mch->memory[0xFFFE] << 8) | mch->memory[0xFFFF];
+		}*/
+		//emulate_graphics(mch->memory);
+		//emulate_sound(mch->memory);
 	}
-	*/
 
 	free(mch->memory);
 	free(mch->prg_rom);
