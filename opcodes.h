@@ -98,6 +98,10 @@ void ldx_imm(uint8_t adr, machine* mch);
 void ldx_zp(uint8_t adr, machine* mch, char has_offset, uint8_t offset);
 void ldx_abs(uint8_t top, uint8_t bot, machine* mch, char has_offset, uint8_t offset);
 
+void ldy_imm(uint8_t adr, machine* mch);
+void ldy_zp(uint8_t adr, machine* mch, char has_offset, uint8_t offset);
+void ldy_abs(uint8_t top, uint8_t bot, machine* mch, char has_offset, uint8_t offset);
+
 void lsr_acc(machine* mch);
 void lsr_zp(uint8_t address, machine* mch);
 void lsr_zpx(uint8_t address, machine* mch);

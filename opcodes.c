@@ -1188,6 +1188,79 @@ void ldx_abs(uint8_t top, uint8_t bot, machine* mch, char has_offset, uint8_t of
 	mch->pc += 2;
 }
 
+void ldy_abs(uint8_t top, uint8_t bot, machine* mch, char has_offset, uint8_t offset)
+{
+	uint16_t adr = ((uint16_t) top << 8) | bot;
+
+	if (has_offset) {
+		adr += offset;
+		if (page_check(adr, mch->pc) != 1) {
+			mch->cycle += 1;
+		}
+	}
+
+	if (adr == 0) {
+		mch->P = SET_ZERO(mch->P); 
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+	}
+
+	if (adr < 0) {
+		mch->P = SET_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_NEG(mch->P);
+	}
+
+	mch->Y = mch->memory[adr];
+	mch->cycle += 4;
+	mch->pc += 2;
+}
+
+void ldy_imm(uint8_t adr, machine* mch)
+{
+	if (adr == 0) {
+		mch->P = SET_ZERO(mch->P); 
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+	}
+
+	if (adr < 0) {
+		mch->P = SET_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_NEG(mch->P);
+	}
+
+	mch->Y = mch->memory[adr];
+	mch->cycle += 2;
+	mch->pc += 1;
+}
+
+void ldy_zp(uint8_t adr, machine* mch, char has_offset, uint8_t offset)
+{
+	uint16_t address = (uint16_t) adr;
+
+	if (has_offset) {
+		adr += offset;
+		mch->cycle += 1;
+
+		if (adr == 0) {
+			mch->P = SET_ZERO(mch->P);
+		} else {
+			mch->P = CLEAR_ZERO(mch->P);
+		}
+
+		if (adr < 0) {
+			mch->P = SET_NEG(mch->P);
+		} else {
+			mch->P = CLEAR_NEG(mch->P);
+		}
+	}
+
+	mch->Y = mch->memory[adr];
+	mch->cycle += 3;
+	mch->pc += 1;
+}
+
 void sei(machine* mch)
 {
 	mch->P = SET_INTERRUPT(mch->P);

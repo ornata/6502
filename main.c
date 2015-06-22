@@ -236,27 +236,11 @@ void execute_cpu(machine* mch)
 		case 0xBE: return ldx_abs(opcode[2], opcode[1], mch, 1, mch->X);
 
 		/* LDY - load into Y */
-		case 0xA0: // immediate
-			mch->cycle += 2;
-			exit(1);
-			break;
-		case 0xA4: // zero page
-			mch->cycle += 3;
-			exit(1);
-			break;
-		case 0xB4: // zero page, X
-			mch->cycle += 4;
-			exit(1);
-			break;
-		case 0xAC: // absolute
-			mch->cycle += 4;
-			exit(1);
-			break;
-		case 0xBC: // absolute, X
-			mch->cycle += 4; // +1 if pg boundary crossed
-			exit(1);
-			break;
-
+		case 0xA0: return ldy_imm(opcode[1], mch);
+		case 0xA4: return ldy_zp(opcode[1], mch, 0, 0);
+		case 0xB4: return ldy_zp(opcode[1], mch, 1, mch->X);
+		case 0xAC: return ldy_abs(opcode[2], opcode[1], mch, 0, 0);
+		case 0xBC: return ldy_abs(opcode[2], opcode[1], mch, 1, mch->X);
 
 		/* LSR - shift mem or accumulator right one bit */
 		case 0x4A: return lsr_acc(mch);
