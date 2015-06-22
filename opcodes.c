@@ -1115,6 +1115,56 @@ void lda_zp(uint8_t adr, machine* mch, char has_offset, uint8_t offset)
 	mch->pc += 1;
 }
 
+void lda_indx(uint8_t top, uint8_t bot, machine* mch)
+{
+	adc(mch->X, &top, &mch->P);
+	adc(mch->X, &bot, &mch->P);
+	uint16_t adr = ((uint16_t) mch->memory[top] << 8) | mch->memory[bot];
+
+	if (adr == 0) {
+		mch->P = SET_ZERO(mch->P); 
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+	}
+
+	if (adr < 0) {
+		mch->P = SET_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_NEG(mch->P);
+	}
+
+	mch->A = mch->memory[adr];
+	mch->cycle += 6;
+	mch->pc += 2;
+}
+
+void lda_indy(uint8_t top, uint8_t bot, machine* mch)
+{
+	uint16_t adr = ((uint16_t) top << 8) | bot;
+	adc_16(mch->Y, &adr, &mch->P);
+	adr = mch->memory[adr];
+
+	if (page_check(mch->pc, adr) != 1) {
+		mch->cycle += 1;
+	}
+
+	if (adr == 0) {
+		mch->P = SET_ZERO(mch->P); 
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+	}
+
+	if (adr < 0) {
+		mch->P = SET_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_NEG(mch->P);
+	}
+
+	mch->A = mch->memory[adr];
+	mch->cycle += 5;
+	mch->pc += 2;
+}
+
 void ldx_imm(uint8_t adr, machine* mch)
 {
 	if (adr == 0) {

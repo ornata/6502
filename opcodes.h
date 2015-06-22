@@ -93,6 +93,8 @@ void or_indy(uint8_t top, uint8_t bot, machine* mch);
 void lda_imm(uint8_t adr, machine* mch);
 void lda_abs(uint8_t top, uint8_t bot, machine* mch, char has_offset, uint8_t offset);
 void lda_zp(uint8_t adr, machine* mch, char has_offset, uint8_t offset);
+void lda_indx(uint8_t top, uint8_t bot, machine* mch);
+void lda_indy(uint8_t top, uint8_t bot, machine* mch);
 
 void ldx_imm(uint8_t adr, machine* mch);
 void ldx_zp(uint8_t adr, machine* mch, char has_offset, uint8_t offset);
