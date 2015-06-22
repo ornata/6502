@@ -21,7 +21,7 @@ void execute_cpu(machine* mch)
 
 	fprintf(stdout, "opcode: %x\n", opcode[0]);
 
-	switch(*opcode) 
+	switch(*opcode) {
 		case 0x02: exit(123);
 		case 0x12: exit(123);
 		case 0x22: exit(123);
@@ -75,24 +75,11 @@ void execute_cpu(machine* mch)
 		case 0xC9: return cmp_imm(opcode[1], mch);
 		case 0xC5: return cmp_zp(opcode[1], mch);
 		case 0xD5: return cmp_zpx(opcode[1], mch);
-		case 0xCD: return cmp_abs(opcode[2], opcode[1], mch);
-		case 0xDD: // absolute, offset by X
-			mch->cycle += 4; // add 1 if page boundary crossed
-			exit(1);
-			break;
-		case 0xD9: // absolute, offset by Y
-			mch->cycle += 4; // add 1 if pg boundary crossed
-			exit(1);
-			break;
-		case 0xC1: // (indirect, X)
-			mch->cycle += 6;
-			exit(1);
-			break;
-		case 0xD1:
-			mch->cycle += 5; // add 1 if pg boundary crossed
-			exit(1);
-			break;
-
+		case 0xCD: return cmp_abs(opcode[2], opcode[1], mch, 0, 0);
+		case 0xDD: return cmp_abs(opcode[2], opcode[1], mch, 1, mch->X);
+		case 0xD9: return cmp_abs(opcode[2], opcode[1], mch, 1, mch->Y);
+		case 0xC1: return cmp_indy(opcode[2], opcode[1], mch);
+		case 0xD1: return cmp_indx(opcode[2], opcode[1], mch);
 		case 0xE0: return cpx_imm(opcode[1], mch);
 		case 0xE4: // zero page
 			mch->cycle += 3;

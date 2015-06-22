@@ -243,9 +243,17 @@ void cmp_zpx(uint8_t address, machine* mch)
 	mch->cycle += 4;
 }
 
-void cmp_abs(uint8_t high, uint8_t low, machine* mch)
+void cmp_abs(uint8_t high, uint8_t low, machine* mch, char has_offset, uint8_t offset)
 {
 	uint16_t adr = ((uint16_t) high << 8) | low;
+
+	if (has_offset) {
+		adc_16(offset, &adr, &mch->P);
+		if (page_check(adr, mch->pc) != 1) {
+			mch->cycle += 1;
+		}
+	}
+
 	uint8_t cmp = (mch->A)/2 - (mch->memory[adr])/2;
 
 	if (cmp == 0) {
@@ -262,12 +270,12 @@ void cmp_abs(uint8_t high, uint8_t low, machine* mch)
 	mch->cycle += 4;
 }
 
-void cmp_absx(uint8_t high, uint8_t low, machine* mch)
+void cmp_indx(uint8_t high, uint8_t low, machine* mch)
 {
-	uint16_t adr = ((uint16_t) high << 8) | low;
-	adc_16(mch->X, &adr, &(mch->P));
+	adc(mch->X, &high, &mch->P);
+	adc(mch->X, &low, &mch->P);
+	uint16_t adr = ((uint16_t)mch->memory[high] << 8) | mch->memory[low];
 	uint8_t cmp = (mch->A)/2 - (mch->memory[adr])/2;
-
 	if (cmp == 0) {
 		mch->P = SET_ZERO(mch->P);
 	} else if (cmp > 0) {
@@ -277,13 +285,29 @@ void cmp_absx(uint8_t high, uint8_t low, machine* mch)
 		mch->P = CLEAR_ZERO(mch->P);
 		mch->P = SET_NEG(mch->P);
 	}
+	mch->pc += 2;
+	mch->cycle += 6;
+}
 
-	if (page_check(adr, mch->P) != 1){
+void cmp_indy(uint8_t high, uint8_t low, machine* mch)
+{
+	uint16_t adr = ((uint16_t) mch->memory[high] << 8) | mch->memory[low];
+	adc_16(mch->Y, &adr, &mch->P);
+	if (page_check(adr, mch->pc) != 1) {
 		mch->cycle += 1;
 	}
-
+	uint8_t cmp = (mch->A)/2 - (mch->memory[adr])/2;
+	if (cmp == 0) {
+		mch->P = SET_ZERO(mch->P);
+	} else if (cmp > 0) {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = CLEAR_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = SET_NEG(mch->P);
+	}
 	mch->pc += 2;
-	mch->cycle += 4;
+	mch->cycle += 5;
 }
 
 /*
@@ -1140,7 +1164,7 @@ void lda_indx(uint8_t top, uint8_t bot, machine* mch)
 
 void lda_indy(uint8_t top, uint8_t bot, machine* mch)
 {
-	uint16_t adr = ((uint16_t) top << 8) | bot;
+	uint16_t adr = ((uint16_t) mch->memory[top] << 8) | mch->memory[bot];
 	adc_16(mch->Y, &adr, &mch->P);
 	adr = mch->memory[adr];
 
