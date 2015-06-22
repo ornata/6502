@@ -21,7 +21,7 @@ void execute_cpu(machine* mch)
 
 	fprintf(stdout, "opcode: %x\n", opcode[0]);
 
-	switch(*opcode) {
+	switch(*opcode) 
 		case 0x02: exit(123);
 		case 0x12: exit(123);
 		case 0x22: exit(123);
@@ -202,6 +202,7 @@ void execute_cpu(machine* mch)
 		case 0x08: return php(mch);
 		case 0x68: return pla(mch);
 		case 0x28: return plp(mch);
+		case 0x60: return rts(mch);
 		case 0x78: return sei(mch); 
 		case 0x38: return sec(mch);
 		case 0xAA: return tax(mch);

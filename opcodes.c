@@ -1427,4 +1427,13 @@ void txa(machine* mch)
 	mch->cycle += 2;	
 }
 
+void rts(machine* mch)
+{
+	uint16_t adr = mch->stack[mch->stack_head];
+	mch->stack_head--;
+	adr = adr | ((uint16_t) mch->stack[mch->stack_head] << 8);
+	mch->pc = adr + 1;
+	mch->cycle += 6;
+}
+
 
