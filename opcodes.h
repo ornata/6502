@@ -120,6 +120,7 @@ char page_check(uint16_t addr1, uint16_t addr2);
 void jmp(uint8_t high, uint8_t low, machine* mch);
 void jmp_abs(uint8_t high, uint8_t low, machine* mch);
 void jmp_ind(uint8_t high, uint8_t low, machine* mch);
+void jsr(uint8_t high, uint8_t low, machine* mch);
 
 void rts(machine* mch);
 void rti(machine* mch);

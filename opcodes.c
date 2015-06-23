@@ -1525,6 +1525,21 @@ void txa(machine* mch)
 	mch->cycle += 2;	
 }
 
+void jsr(uint8_t high, uint8_t low, machine* mch)
+{
+	// push pc to the stack
+	uint8_t pc_high, pc_low;
+	pc_high = mch->pc >> 8;
+	pc_low = mch->pc & 0x00FF;
+	mch->stack_head++;
+	mch->stack[mch->stack_head] = pc_low;
+	mch->stack_head++;
+	mch->stack[mch->stack_head] = pc_high;
+	// set pc to the given address-1
+	mch->pc = (((uint16_t) high << 8) | low) - 1;
+	mch->cycle += 6;
+}
+
 void rts(machine* mch)
 {
 	uint16_t adr = mch->stack[mch->stack_head];

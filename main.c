@@ -86,7 +86,6 @@ void execute_cpu(machine* mch)
 		case 0xC0: return cpy_imm(opcode[1], mch);
 		case 0xC4: return cpy_zp(opcode[1], mch);
 		case 0xCC: return cpy_abs(opcode[2], opcode[1], mch);
-
 		case 0xC6: return dec_zp(opcode[1], mch);
 		case 0xD6: return dec_zpx(opcode[1], mch);
 		case 0xCE: return dec_abs(opcode[2], opcode[1], mch);
@@ -132,15 +131,9 @@ void execute_cpu(machine* mch)
 			exit(1);
 			break;
 
-		case 0x4C: jmp_abs(opcode[2], opcode[1], mch);
-		case 0x6C: jmp_ind(opcode[2], opcode[1], mch);
-
-		/* JSR - jump and save return address */
-		case 0x20:
-			mch->cycle += 6;
-			exit(1);
-			break;
-
+		case 0x4C: return jmp_abs(opcode[2], opcode[1], mch);
+		case 0x6C: return jmp_ind(opcode[2], opcode[1], mch);
+		case 0x20: return jsr(opcode[2], opcode[1], mch);
 		case 0xA9: return lda_imm(opcode[1], mch);
 		case 0xA5: return lda_zp(opcode[1], mch, 0, 0);
 		case 0xB5: return lda_zp(opcode[1], mch, 1, mch->X);
