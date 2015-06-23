@@ -17,6 +17,8 @@ void plp(machine* mch);
 void pha(machine* mch);
 void pla(machine* mch);
 void sec(machine* mch);
+void iny(machine* mch);
+void inx(machine* mch);
 
 void adc(uint8_t value, uint8_t* dest, uint8_t* P);
 void adc_16(uint8_t value, uint16_t* dest, uint8_t* P);
@@ -116,6 +118,9 @@ void lsr_abs(uint8_t top, uint8_t bot, machine* mch);
 void lsr_absx(uint8_t top, uint8_t bot, machine* mch);
 
 char page_check(uint16_t addr1, uint16_t addr2);
+
+void inc_zp(uint8_t address, machine* mch, char has_offset, uint8_t offset);
+void inc_abs(uint8_t high, uint8_t low, machine* mch, char has_offset, uint8_t offset);
 
 void jmp(uint8_t high, uint8_t low, machine* mch);
 void jmp_abs(uint8_t high, uint8_t low, machine* mch);

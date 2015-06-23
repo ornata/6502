@@ -100,37 +100,12 @@ void execute_cpu(machine* mch)
 		case 0x59: return eor_absy(opcode[2], opcode[1], mch);
 		case 0x41: return eor_indx(opcode[2], opcode[1], mch);
 		case 0x51: return eor_indy(opcode[2], opcode[1], mch);
-
-		/* INC - increment memory by 1 */
-		case 0xE6: // zero page
-			mch->cycle += 5;
-			exit(1);
-			break;
-		case 0xF6: // zero page, X
-			mch->cycle += 6;
-			exit(1);
-			break;
-		case 0xEE: // absolute
-			mch->cycle += 6;
-			exit(1);
-			break;
-		case 0xFE: // absolute, X
-			mch->cycle += 7;
-			exit(1);
-			break;
-
-		/* INX - increment X index by 1 */
-		case 0xE8:
-			mch->cycle += 2;
-			exit(1);
-			break;
-
-		/* INY - increment Y index by 1 */
-		case 0xC8:
-			mch->cycle += 2;
-			exit(1);
-			break;
-
+		case 0xE6: return inc_zp(opcode[1], mch, 0, 0);
+		case 0xF6: return inc_zp(opcode[1], mch, 1, mch->X);
+		case 0xEE: return inc_abs(opcode[2], opcode[1], mch, 0, 0);
+		case 0xFE: return inc_abs(opcode[2], opcode[1], mch, 1, mch->X);
+		case 0xE8: return inx(mch);
+		case 0xC8: return iny(mch);
 		case 0x4C: return jmp_abs(opcode[2], opcode[1], mch);
 		case 0x6C: return jmp_ind(opcode[2], opcode[1], mch);
 		case 0x20: return jsr(opcode[2], opcode[1], mch);

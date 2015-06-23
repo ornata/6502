@@ -1046,6 +1046,44 @@ void jmp(uint8_t high, uint8_t low, machine* mch)
 	mch->cycle += 3;
 }
 
+/* INY - increment Y */
+void iny(machine* mch)
+{
+	adc(1, &mch->Y, &mch->P);
+	mch->cycle += 2;
+}
+
+/* INY - increment X */
+void inx(machine* mch)
+{
+	adc(1, &mch->X, &mch->P);
+	mch->cycle += 2;
+}
+
+void inc_zp(uint8_t address, machine* mch, char has_offset, uint8_t offset)
+{
+	if (has_offset) {
+		adc(mch->X, &address, &mch->P);
+		mch->cycle += 1;
+	}
+	adc(1, &mch->memory[address], &mch->P);
+	mch->cycle += 3;
+}
+
+void inc_abs(uint8_t high, uint8_t low, machine* mch, char has_offset, uint8_t offset)
+{
+	uint16_t address = ((uint16_t)high << 8) | low;
+	if (has_offset) {
+		address += mch->X;
+		if (page_check(address, mch->pc) != 1) {
+			mch->cycle += 1;
+		}
+	}
+
+	adc(1, &mch->memory[address], &mch->P);
+	mch->cycle += 4;
+}
+
 /* JMP - set PC to given address */
 void jmp_abs(uint8_t high, uint8_t low, machine* mch)
 {
