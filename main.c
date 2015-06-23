@@ -109,7 +109,7 @@ void execute_cpu(machine* mch)
 		case 0x49: return eor_imm(opcode[1], mch);
 		case 0x45: return eor_zp(opcode[1], mch);
 		case 0x55: return eor_zpx(opcode[1], mch);
-		case 0x40: return eor_abs(opcode[2], opcode[1], mch);
+		case 0x4D: return eor_abs(opcode[2], opcode[1], mch);
 		case 0x5D: return eor_absx(opcode[2], opcode[1], mch);
 		case 0x59: return eor_absy(opcode[2], opcode[1], mch);
 		case 0x41: return eor_indx(opcode[2], opcode[1], mch);
@@ -189,6 +189,7 @@ void execute_cpu(machine* mch)
 		case 0x08: return php(mch);
 		case 0x68: return pla(mch);
 		case 0x28: return plp(mch);
+		case 0x40: return rti(mch);
 		case 0x60: return rts(mch);
 		case 0x78: return sei(mch); 
 		case 0x38: return sec(mch);

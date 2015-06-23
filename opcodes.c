@@ -1460,4 +1460,17 @@ void rts(machine* mch)
 	mch->cycle += 6;
 }
 
+void rti(machine* mch)
+{
+	// get processor status
+	mch->P = mch->stack[mch->stack_head];
+	mch->stack_head--;
+	// get the high byte
+	mch->pc = (uint16_t)(mch->stack[mch->stack_head] << 8);
+	mch->stack_head--;
+	// get the low byte
+	mch->pc &= mch->stack[mch->stack_head]; // unlike rts, this is just the address, not address + 1
+	mch->stack_head--;
+	mch->cycle += 6;
+}
 
