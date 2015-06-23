@@ -58,6 +58,8 @@ void brk(machine* mch);
 
 void cmp_imm(uint8_t value, machine* mch);
 void cpx_imm(uint8_t value, machine* mch);
+void cpx_zp(uint8_t address, machine* mch);
+void cpx_abs(uint8_t high, uint8_t low, machine* mch);
 void cpy_imm(uint8_t value, machine* mch);
 void cmp_zp(uint8_t address, machine* mch);
 void cmp_zpx(uint8_t address, machine* mch);
