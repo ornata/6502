@@ -399,6 +399,43 @@ void cpy_imm(uint8_t value, machine* mch)
 	mch->cycle += 2;
 }
 
+void cpy_zp(uint8_t address, machine* mch)
+{
+	uint8_t cmp = (mch->Y)/2 - (mch->memory[address])/2;
+
+	if (cmp == 0) {
+		mch->P = SET_ZERO(mch->P);
+	} else if (cmp > 0) {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = CLEAR_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = SET_NEG(mch->P);
+	}
+
+	mch->pc += 1;
+	mch->cycle += 3;
+}
+
+void cpy_abs(uint8_t high, uint8_t low, machine* mch)
+{
+	uint8_t value = mch->memory[(uint16_t)(high << 8) | low];
+	uint8_t cmp = (mch->Y)/2 - value/2;
+
+	if (cmp == 0) {
+		mch->P = SET_ZERO(mch->P);
+	} else if (cmp > 0) {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = CLEAR_NEG(mch->P);
+	} else {
+		mch->P = CLEAR_ZERO(mch->P);
+		mch->P = SET_NEG(mch->P);
+	}
+
+	mch->pc += 2;
+	mch->cycle += 4;
+}
+
 /*
 * DEX - Decrement X
 * Flags affected - Z, N

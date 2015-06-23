@@ -84,14 +84,8 @@ void execute_cpu(machine* mch)
 		case 0xE4: return cpx_zp(opcode[1], mch);
 		case 0xEC: return cpx_abs(opcode[2], opcode[1], mch);
 		case 0xC0: return cpy_imm(opcode[1], mch);
-		case 0xC4: // zero page
-			mch->cycle += 3;
-			exit(1);
-			break;
-		case 0xCC: // absolute
-			mch->cycle += 4;
-			exit(1);
-			break;
+		case 0xC4: return cpy_zp(opcode[1], mch);
+		case 0xCC: return cpy_abs(opcode[2], opcode[1], mch);
 
 		case 0xC6: return dec_zp(opcode[1], mch);
 		case 0xD6: return dec_zpx(opcode[1], mch);
